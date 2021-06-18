@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "ultrasonic",
+  "version": "${version}",
+
+  "name": "UltraSonic",
+  "description": "Minecraft Pathing",
+  "authors": [
+    "NotSomeBot"
+  ],
+  "contact": {
+    "repo": "https://github.com/mariusdkm/UltraSonic"
+  },
+  "environment": "client",
+  "license": "MIT",
+  "icon": "assets/ultrasonic/logo.png",
+  "entrypoints": {
+    "main": [
+      "io.github.mariusdkm.ultrasonic.UltraSonic"
+    ]
+  },
+  "mixins": [
+  ],
+  "depends": {
+    "fabricloader": ">=0.7.4",
+    "minecraft": "*",
+    "jsmacros": "*"
+  }
+}
