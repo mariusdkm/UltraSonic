@@ -12,17 +12,21 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
-    flatDir {
-        dirs 'libs'
-    }
     mavenCentral()
     maven {
         name "Modmuss50 Repository"
         url 'https://maven.fabricmc.net/'
     }
-    maven {
-        // name "JsMacros"
-        url 'https://wagyourtail.github.io/maven/repository/'
+
+    if (project.jsmacros_mcversion.contains('.')) {
+        flatDir {
+            dirs 'libs'
+        }
+    } else {
+        maven {
+            // name "JsMacros"
+            url 'https://wagyourtail.github.io/maven/repository/'
+        }
     }
 }
 
@@ -34,9 +38,25 @@ dependencies {
 
     // partial fabric api
     modImplementation "net.fabricmc.fabric-api:fabric-api-base:${project.api_base_version}"
+    include "net.fabricmc.fabric-api:fabric-api-base:${project.api_base_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-lifecycle-events-v1:${project.lifecycle_events_version}"
+    include "net.fabricmc.fabric-api:fabric-lifecycle-events-v1:${project.lifecycle_events_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:${project.key_bind_api_version}"
+    include "net.fabricmc.fabric-api:fabric-key-binding-api-v1:${project.key_bind_api_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
+    include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-command-api-v1:${project.command_api_version}"
+    include "net.fabricmc.fabric-api:fabric-command-api-v1:${project.command_api_version}"
 
     // JsMacros
-    modImplementation "xyz.wagyourtail.${jsmacros_mcversion}:JsMacros:${project.jsmacros_version}"
+    if (project.jsmacros_mcversion.contains('.')) {
+        // local
+        modImplementation "xyz.wagyourtail:jsmacros-${project.jsmacros_mcversion}:${project.jsmacros_version}"
+    } else {
+        // maven
+        modImplementation "xyz.wagyourtail.${jsmacros_mcversion}:JsMacros:${project.jsmacros_version}"
+    }
+
 
     // https://mvnrepository.com/artifact/org.graalvm.js/js
     implementation group: 'org.graalvm.sdk', name: 'graal-sdk', version: '20.1.0'
@@ -47,7 +67,8 @@ dependencies {
     implementation group: 'org.graalvm.regex', name: 'regex', version: '20.1.0'
     implementation group: 'com.ibm.icu', name: 'icu4j', version: '64.2'
 
-
+    // needed for JsMacros
+    implementation "io.noties:prism4j:${prism_version}"
     // //nullable not defined so...
     // implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
