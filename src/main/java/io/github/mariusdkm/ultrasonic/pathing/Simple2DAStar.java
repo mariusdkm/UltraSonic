@@ -15,28 +15,29 @@ import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
 import java.util.*;
 
-import static xyz.wagyourtail.jsmacros.client.JsMacros.LOGGER;
-
 public class Simple2DAStar {
-    public static Draw3D scoreBlocks = new Draw3D();
     private final ClientPlayerEntity player;
     private final World world;
     private final BlockPos start;
     private final BlockPos goal;
+    private final boolean allowSprint;
+    public Draw3D scoreBlocks;
 
-    public Simple2DAStar(ClientPlayerEntity player, BlockPos start, BlockPos goal) {
+    public Simple2DAStar(ClientPlayerEntity player, BlockPos start, BlockPos goal, boolean allowSprint) {
         this.player = player;
         this.world = player.getEntityWorld();
         this.start = start;
         this.goal = goal;
+        this.allowSprint = allowSprint;
 
+        this.scoreBlocks = new Draw3D();
         synchronized (FHud.renders) {
             FHud.renders.add(scoreBlocks);
         }
     }
 
     public Node createPath() {
-        PriorityQueue<Node> queue = new PriorityQueue<>(new NodeComparator());
+        PriorityQueue<Node> queue = new PriorityQueue<>(new Node.NodeComparator());
         Set<Node> closedSet = new HashSet<>();
         Draw3D closedSetBlocks = new Draw3D();
 
@@ -44,8 +45,7 @@ public class Simple2DAStar {
             FHud.renders.add(closedSetBlocks);
         }
 
-        Node currentNode = new Node(start, 0, new MovementDummy(player));
-        visualizePath(Collections.singletonList(currentNode));
+        Node currentNode = new Node(start, 0, 0, new MovementDummy(player));
         queue.add(currentNode);
 
         int maxScore = 0;
@@ -57,7 +57,16 @@ public class Simple2DAStar {
             } while (closedSet.contains(currentNode));
 
             closedSet.add(currentNode);
-            closedSetBlocks.addPoint(new PositionCommon.Pos3D(currentNode.pos.getX() + 0.5D, currentNode.pos.getY() + 0.5D, currentNode.pos.getZ() + 0.5D), 0.5, 0xfcdb03);
+//            closedSetBlocks.addPoint(new PositionCommon.Pos3D(currentNode.pos.getX() + 0.5D, currentNode.pos.getY() + 0.5D, currentNode.pos.getZ() + 0.5D), 0.5, 0xfcdb03);
+            for (Draw3D.Line line : scoreBlocks.getLines()) {
+                // I hope this doesn't impact the performance to much
+                scoreBlocks.removeLine(line);
+            }
+            for (Node node : getPath(currentNode)) {
+                if (node.prevNode != null) {
+                    scoreBlocks.addLine(node.pos.getX() + 0.5D, node.pos.getY() + 1.5D, node.pos.getZ() + 0.5D, node.prevNode.pos.getX() + 0.5D, node.prevNode.pos.getY() + 1.5D, node.prevNode.pos.getZ() + 0.5D, 0xde070a);
+                }
+            }
 
             int currentScore = currentNode.score;
 
@@ -70,10 +79,10 @@ public class Simple2DAStar {
             for (int x = currentNode.pos.getX() - 1; x <= currentNode.pos.getX() + 1; x += 1) {
                 ZLoop:
                 for (int z = currentNode.pos.getZ() - 1; z <= currentNode.pos.getZ() + 1; z += 1) {
-                    if (currentNode.pos.getX() != x && currentNode.pos.getZ() != z) {
+                    if (currentNode.pos.getX() == x && currentNode.pos.getZ() == z) {
                         continue;
                     }
-                    Node newNode = new Node(new BlockPos(x, currentNode.pos.getY(), z), 0, currentNode.player);
+                    Node newNode = new Node(new BlockPos(x, currentNode.pos.getY(), z), 0, currentNode.distTravel, currentNode.player);
                     if (!closedSet.contains(newNode) && newNode.isWalkable()) {
                         newNode.score = calcScore(newNode, currentScore);
                         if (newNode.score > maxScore) {
@@ -86,7 +95,6 @@ public class Simple2DAStar {
                             // Check if node already exists in the queue
                             if (oldNode.equals(newNode)) {
                                 if (((Node) oldNode).score > newNode.score) {
-                                    LOGGER.info("Better Node x={}, y={}, z={}", newNode.pos.getX(), newNode.pos.getY(), newNode.pos.getZ());
                                     queue.remove(oldNode);
                                     queue.add(newNode);
                                 }
@@ -108,13 +116,14 @@ public class Simple2DAStar {
     }
 
     private int findBestPath(Node node) {
-        int cost = 0;
-        boolean directPath = this.world.raycast(new RaycastContext(node.player.getCameraPosVec(1.0F),
+        int cost;
+        boolean directPath = this.world.raycast(new RaycastContext(node.player.getCameraPosVec(1.0F).subtract(0, 1, 0),
                 new Vec3d(node.pos.getX() + 0.5, node.pos.getY() + 1.5, node.pos.getZ() + 0.5),
                 RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, node.player)).getType() == HitResult.Type.MISS;
         Box goal = new Box(node.pos.add(0, 1, 0));
         // ab = B - A [-(node.pos.getX() + 0.5D) = -node.pos.getX() - 0.5D]
         if (directPath) {
+            cost = 0;
 //            Optional<Vec3d> hit = new Box(node.pos.add(0, 0, 0)).raycast(player.getPos(), MovementHelper.vec3dFromBlockPos(node.pos, true));
 //            if(!hit.isPresent()) {
 //                LOGGER.info("WTF WHY IS THERE NO RESULT");
@@ -125,7 +134,7 @@ public class Simple2DAStar {
                 cost += 1;
                 Vec3d vecToBlock = node.player.getPos().subtract(node.pos.getX() + 0.5D, node.pos.getY() + 0.5D, node.pos.getZ() + 0.5D).multiply(-1);
                 float yaw = (float) (MovementHelper.calcXZAngle(vecToBlock));
-                PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, false);
+                PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, allowSprint);
                 MovementDummy testSubject = node.player.clone();
                 testSubject.applyInput(newInput);
                 if (testSubject.horizontalCollision) {
@@ -139,13 +148,21 @@ public class Simple2DAStar {
                     testSubject.applyInput(newInput);
                     // But do we actually travel further with the new yaw?
                     if (diff > testSubject.getPos().squaredDistanceTo(node.player.getPos())) {
+                        node.distTravel += diff;
                         yaw = (float) (MovementHelper.calcXZAngle(vecToBlock));
+                    } else if (diff == 0.0 && testSubject.getPos().squaredDistanceTo(node.player.getPos()) == 0.0) {
+                        return Integer.MAX_VALUE;
+                    } else {
+                        node.distTravel += testSubject.getPos().squaredDistanceTo(node.player.getPos());
                     }
                 }
                 // TODO is ot faster to use the testSubject, or to recalc the move?
                 newInput.yaw = yaw;
                 node.player.applyInput(newInput);
+
             }
+        } else {
+            cost = Integer.MAX_VALUE;
         }
 //        double maxDistance = node.pos.getSquaredDistance(new Vec3i(node.player.getX(), node.player.getY(), node.p layer.getZ()), true);
         // Vec3d dirVec = player.getPos().add(player.getVelocity().normalize().multiply(maxDistance));
@@ -157,13 +174,22 @@ public class Simple2DAStar {
         // h = how many tick is it gonna take to finish
         // h = distanceToGoal / avgSpeed; avgSpeed = distanceFromStart / timeSpend
         // h = distanceToGoal * timeSpend / distanceFromStart
-//        double avgSpeed = newNode.pos.getSquaredDistance(start) / newNode.player.getInputs().size();
-//        if (avgSpeed > 0.1) {
-//            heuristic = (int) (newNode.pos.getSquaredDistance(goal) / avgSpeed);
         // avgWalkingSpeed = 0.21585
-        int heuristic = (int) (newNode.pos.getSquaredDistance(goal) / 0.21585);
+//        int heuristic = (int) (newNode.pos.getSquaredDistance(goal) / 0.2);
 
         int movementCost = findBestPath(newNode);
+        if (movementCost == Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+
+        int heuristic;
+        double avgSpeed = newNode.distTravel / newNode.player.getInputs().size();
+        if (avgSpeed > 0.05) {
+            heuristic = (int) (newNode.pos.getSquaredDistance(goal) / avgSpeed);
+        } else {
+            heuristic = (int) (newNode.pos.getSquaredDistance(goal) / 0.1);
+        }
+
         return movementCost + heuristic + pastCost;
     }
 
@@ -192,6 +218,7 @@ public class Simple2DAStar {
         }
         for (Node node : path) {
             scoreBlocks.addPoint(new PositionCommon.Pos3D(node.pos.getX() + 0.5D, node.pos.getY() + 0.5D, node.pos.getZ() + 0.5D), 0.5, 0xde070a);
+//            scoreBlocks.addLine(node.pos.getX() + 0.5D, node.pos.getY() + 1.5D, node.pos.getZ() + 0.5D, node.prevNode.pos.getX() + 0.5D, node.prevNode.pos.getY() + 1.5D, node.prevNode.pos.getZ() + 0.5D, 0xde070a);
         }
 
 //        int redValue = (int) (newNode.score > maxScore / 2 ? 1 - 2 * (newNode.score - maxScore / 2) / maxScore : 1.0) * 255;
@@ -200,38 +227,5 @@ public class Simple2DAStar {
 //        int color = ((redValue & 0xFF) << 16) | ((greenValue & 0xFF) << 8);
 //        scoreBlocks.addPoint(new PositionCommon.Pos3D(newNode.pos.getX() + 0.5D, newNode.pos.getY() + 0.5D, newNode.pos.getZ() + 0.5D), 0.5, color);
 
-    }
-
-    class Node {
-        public BlockPos pos;
-        public float slipperiness;
-        public int score;
-        public MovementDummy player;
-        public Node prevNode = null;
-
-        public Node(BlockPos pos, int score, MovementDummy player) {
-            this.pos = pos;
-            this.slipperiness = world.getBlockState(pos).getBlock().getSlipperiness();
-            this.score = score;
-            this.player = player.clone();
-        }
-
-        public float getSlipperiness() {
-            return slipperiness;
-        }
-
-        public boolean isWalkable() {
-            return world.getBlockState(pos).isSolidBlock(world, pos) &&
-                    world.getBlockState(pos.up()).isAir() &&
-                    world.getBlockState(pos.up(2)).isAir();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Node node = (Node) o;
-            return Float.compare(node.slipperiness, slipperiness) == 0 && pos.equals(node.pos);
-        }
     }
 }

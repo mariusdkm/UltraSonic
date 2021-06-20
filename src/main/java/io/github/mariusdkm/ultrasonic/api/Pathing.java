@@ -11,8 +11,8 @@ import xyz.wagyourtail.jsmacros.core.library.Library;
 public class Pathing extends BaseLibrary {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
 
-    public Simple2DAStar pathTo(int x, int y, int z) {
+    public Simple2DAStar pathTo(int x, int y, int z, boolean allowSprint) {
         assert mc.player != null;
-        return new Simple2DAStar(mc.player, mc.player.getBlockPos().down(), new BlockPos(x, y, z));
+        return new Simple2DAStar(mc.player, mc.player.getBlockPos().down(), new BlockPos(x, y, z), allowSprint);
     }
 }

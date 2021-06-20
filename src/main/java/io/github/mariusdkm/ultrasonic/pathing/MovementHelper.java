@@ -163,7 +163,7 @@ public class MovementHelper {
 //    }
 
     public static double calcXZAngle(Vec3d vec) {
-        return Math.atan2(vec.getZ(), vec.getX()) * 180.0D/Math.PI - 90.0D;
+        return Math.atan2(vec.getZ(), vec.getX()) * 180.0D / Math.PI - 90.0D;
     }
 
     public static Vec3d vec3dFromBlockPos(BlockPos pos, boolean treatAsBlockPos) {
