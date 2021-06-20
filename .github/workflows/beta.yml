@@ -37,25 +37,16 @@ jobs:
       
     - name: Build with Gradle
       run: ./gradlew build
-      
+
     - uses: actions/github-script@v2
       id: fname
       with:
         result-encoding: string
         script: |
           const fs = require("fs")
-          return fs.readdirSync("./dist/").filter(e => !e.endsWith("dev.jar") && !e.endsWith("sources.jar") && e.endsWith(".jar"))[0].replace(".jar", "");
-        
+          return fs.readdirSync("./build/libs/").filter(e => !e.endsWith("dev.jar") && !e.endsWith("sources.jar") && e.endsWith(".jar"))[0].replace(".jar", "");
+
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ steps.fname.outputs.result }}
-        path: ./dist/**/*
-        
-    - uses: actions/github-script@v2
-      with:
-        result-encoding: string
-        script: |
-          const fs = require("fs");
-          let file = fs.readFileSync("./gradle.properties");
-          file = file.toString().split("\n").map(e => e.trim().startsWith("mod_version") ? `${e.substring(0, e.length - 7)}SNAPSHOT` : e).join("\n");
-          fs.writeFileSync("./gradle.properties", file);
+        path: ./build/libs/**/*
