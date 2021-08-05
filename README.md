@@ -38,19 +38,34 @@ This mod currently adds the `Pathing` object to use in macros.
 It can be used in any language just like for example the `Player` object.
 
 ### Example
-
+1st script, pathfind
 ```js
-// Configure goal to be (10|40|20) and allow sprinting 
-const algo = Pathing.pathTo(10, 40, 20, true)
-// Find path (node will be the goal node)
-let node = algo.createPath()
-// Extract the path from the node
-let path = algo.getPath(node)
-// Visualize path
-algo.visualizePath(path)
-// Extract the inputs from the node
-let inputs = algo.getInputs(node)
-// Execute the inputs/path
+Player.setDrawPredictions(true);
+const goal = Player.rayTraceBlock(20, false).getBlockPos(); 
+Chat.log("Goal: " + goal);
+if (Pathing.pathTo(goal.getX(), goal.getY(), goal.getZ(), true)) {
+    Pathing.visualizePath();
+    var inputs = Pathing.getInputs();
+    //Player.predictInputs(inputs, true);
+    //Player.addInputs(inputs);
+    const file = FS.open("test.csv");
+    file.write("movementForward,movementSideways,yaw,pitch,jumping,sneaking,sprinting\n")
+    Chat.log("Saving inputs")
+    for (const input of inputs) {  
+        file.append(input.toString(false) + "\n")
+    }
+} else {
+    Chat.log("No path found")
+}
+```
+
+2nd script, execute Inputs
+```js
+const PlayerInput = Java.type("xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput")
+
+Chat.log("Reading inputs from file")
+let csv = FS.open("test.csv").read()
+let inputs = PlayerInput.fromCsv(csv)
 Player.addInputs(inputs)
 ```
 
