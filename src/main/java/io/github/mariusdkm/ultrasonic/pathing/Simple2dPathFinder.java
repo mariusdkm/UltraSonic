@@ -56,7 +56,7 @@ public class Simple2dPathFinder extends BasePathFinder {
             while (!goal.intersects(node.player.getBoundingBox())) {
                 cost += 1;
                 Vec3d vecToBlock = node.player.getPos().subtract(node.pos.getX() + 0.5D, node.pos.getY() + 0.5D, node.pos.getZ() + 0.5D).multiply(-1);
-                float yaw = (float) (MovementHelper.calcXZAngle(vecToBlock));
+                float yaw = (float) (MovementHelper.calcAngleDegXZ(vecToBlock));
                 PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, allowSprint);
                 MovementDummy testSubject = node.player.clone();
                 testSubject.applyInput(newInput);
@@ -65,19 +65,21 @@ public class Simple2dPathFinder extends BasePathFinder {
                     // --> we loose momentum/speed
                     double diff = testSubject.getPos().squaredDistanceTo(node.player.getPos());
                     // That's why we move in the direction the wall pushes us, which is usually parallel to the wall
-                    yaw = (float) (MovementHelper.calcXZAngle(testSubject.getVelocity()));
+                    yaw = (float) (MovementHelper.calcAngleDegXZ(testSubject.getVelocity()));
                     testSubject = node.player.clone();
                     newInput.yaw = yaw;
                     testSubject.applyInput(newInput);
                     // But do we actually travel further with the new yaw?
                     if (diff > testSubject.getPos().squaredDistanceTo(node.player.getPos())) {
                         node.distTravel += diff;
-                        yaw = (float) (MovementHelper.calcXZAngle(vecToBlock));
+                        yaw = (float) (MovementHelper.calcAngleDegXZ(vecToBlock));
                     } else if (diff == 0.0 && testSubject.getPos().squaredDistanceTo(node.player.getPos()) == 0.0) {
                         return Integer.MAX_VALUE;
                     } else {
                         node.distTravel += testSubject.getPos().squaredDistanceTo(node.player.getPos());
                     }
+                } else {
+                    node.distTravel = testSubject.getPos().squaredDistanceTo(node.player.getPos());
                 }
                 // TODO is ot faster to use the testSubject, or to recalc the move?
                 newInput.yaw = yaw;

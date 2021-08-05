@@ -24,8 +24,7 @@ repositories {
         }
     } else {
         maven {
-            // name "JsMacros"
-            url 'https://wagyourtail.github.io/maven/repository/'
+            url 'https://jitpack.io'
         }
     }
 }
@@ -44,12 +43,9 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-command-api-v1:${project.command_api_version}"
 
     // JsMacros
-    if (project.jsmacros_mcversion.contains('.')) {
-        // local
-        modImplementation "xyz.wagyourtail:jsmacros-${project.jsmacros_mcversion}:${project.jsmacros_version}"
-    } else {
-        // maven
-        modImplementation "xyz.wagyourtail.${jsmacros_mcversion}:JsMacros:${project.jsmacros_version}"
+    // modImplementation "xyz.wagyourtail:jsmacros-${project.jsmacros_mcversion}:${project.jsmacros_version}"
+    modImplementation("com.github.wagyourtail:JSMacros:${project.jsmacros_version}") {
+        transitive = false
     }
 
 
@@ -57,7 +53,7 @@ dependencies {
     implementation group: 'org.graalvm.sdk', name: 'graal-sdk', version: '20.1.0'
     implementation group: 'org.graalvm.js', name: 'js', version: '20.1.0'
 
-    //these ones are needed to build the mod because doesn't auto include sub-dependencies
+    // these ones are needed to build the mod because doesn't auto include sub-dependencies
     implementation group: 'org.graalvm.truffle', name: 'truffle-api', version: '20.1.0'
     implementation group: 'org.graalvm.regex', name: 'regex', version: '20.1.0'
     implementation group: 'com.ibm.icu', name: 'icu4j', version: '64.2'

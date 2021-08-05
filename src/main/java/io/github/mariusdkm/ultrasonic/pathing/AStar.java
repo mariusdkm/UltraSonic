@@ -17,8 +17,9 @@ public class AStar {
     private final ClientPlayerEntity player;
     private final BlockPos start;
     private final BlockPos goal;
-    private final Simple2dPathFinder simple2DPathFinder;
     private final Draw3D scoreBlocks;
+    private final Simple2dPathFinder simple2DPathFinder;
+    private final Adv3dPathFinder adv3dPathFinder;
 
     public AStar(ClientPlayerEntity player, BlockPos start, BlockPos goal, boolean allowSprint) {
         this.player = player;
@@ -31,6 +32,7 @@ public class AStar {
         }
 
         this.simple2DPathFinder = new Simple2dPathFinder(start, goal, allowSprint);
+        this.adv3dPathFinder = new Adv3dPathFinder(start, goal, allowSprint);
     }
 
     public Node findPath() {
@@ -51,8 +53,13 @@ public class AStar {
                 if (queue.isEmpty()) break;
                 currentNode = queue.poll();
             } while (closedSet.contains(currentNode));
-
             closedSet.add(currentNode);
+
+            if (currentNode.score == Integer.MAX_VALUE) {
+                // If we reach this, there is no path to the goal
+                break;
+            }
+
 //            closedSetBlocks.addPoint(new PositionCommon.Pos3D(currentNode.pos.getX() + 0.5D, currentNode.pos.getY() + 0.5D, currentNode.pos.getZ() + 0.5D), 0.5, 0xfcdb03);
             for (Draw3D.Line line : scoreBlocks.getLines()) {
                 // I hope this doesn't impact the performance to much
@@ -71,7 +78,7 @@ public class AStar {
                 routeAvailable = true;
                 break;
             }
-            Collection<Node> newNodes = simple2DPathFinder.calcNode(currentNode, currentScore, closedSet);
+            Collection<Node> newNodes = adv3dPathFinder.calcNode(currentNode, currentScore, closedSet);
             /* Check if the nodes already exist in the queue, and removing duplicates that are worse
                Without this, the queue would get very big
              */

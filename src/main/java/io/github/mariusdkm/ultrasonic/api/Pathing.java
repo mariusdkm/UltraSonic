@@ -20,7 +20,7 @@ public class Pathing extends BaseLibrary {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
     private static Draw3D pathBlocks;
 
-    private Node node;
+    public Node node;
 
     public static List<Node> getPath(Node currentNode) {
         List<Node> path = new ArrayList<>();
@@ -31,16 +31,19 @@ public class Pathing extends BaseLibrary {
         return path;
     }
 
-    public AStar pathTo(int x, int y, int z, boolean allowSprint) {
+    public boolean pathTo(int x, int y, int z, boolean allowSprint) {
         assert mc.player != null;
-        return new AStar(mc.player, mc.player.getBlockPos().down(), new BlockPos(x, y, z), allowSprint);
+        AStar star = new AStar(mc.player, mc.player.getBlockPos().down(), new BlockPos(x, y, z), allowSprint);
+        this.node = star.findPath();
+        return node != null;
     }
 
-    public List<PlayerInput> getInputs(Node currentNode) {
-        return currentNode.player.getInputs();
+    public List<PlayerInput> getInputs() {
+        return node.player.getInputs();
     }
 
-    public void visualizePath(List<Node> path) {
+    public void visualizePath() {
+        List<Node> path = getPath(this.node);
         if (FHud.renders.contains(pathBlocks)) {
             synchronized (FHud.renders) {
                 FHud.renders.remove(pathBlocks);
@@ -62,5 +65,4 @@ public class Pathing extends BaseLibrary {
 //        scoreBlocks.addPoint(new PositionCommon.Pos3D(newNode.pos.getX() + 0.5D, newNode.pos.getY() + 0.5D, newNode.pos.getZ() + 0.5D), 0.5, color);
 
     }
-
 }

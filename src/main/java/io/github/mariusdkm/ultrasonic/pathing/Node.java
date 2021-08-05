@@ -26,9 +26,14 @@ public class Node {
     }
 
     public boolean isWalkable() {
-        return player.world.getBlockState(pos).isSolidBlock(player.world, pos) &&
+        return !player.world.getBlockState(pos).getCollisionShape(player.world, pos).isEmpty() &&
                 player.world.getBlockState(pos.up()).isAir() &&
                 player.world.getBlockState(pos.up(2)).isAir();
+    }
+
+    @Override
+    public int hashCode() {
+        return this.pos.toString().hashCode();
     }
 
     @Override
