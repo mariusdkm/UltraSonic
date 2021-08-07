@@ -59,7 +59,7 @@ public class MovementHelper {
         // or BlockStateInterface.getBlock(ctx, dest).slipperiness?
         // BlockPos blockPos = this.getVelocityAffectingPos();
         // float t = player.world.getBlockState(blockPos).getBlock().getSlipperiness();
-        return world.getBlockState(new BlockPos(MathHelper.floor(pos.x), MathHelper.floor(pos.y) - 1.0D, MathHelper.floor(pos.z))).getBlock().getSlipperiness() * 0.91F;
+        return world.getBlockState(new BlockPos(MathHelper.fastFloor(pos.x), MathHelper.fastFloor(pos.y) - 1.0D, MathHelper.fastFloor(pos.z))).getBlock().getSlipperiness() * 0.91F;
     }
 
     /**
@@ -126,7 +126,7 @@ public class MovementHelper {
      * @see net.minecraft.entity.player.PlayerEntity#travel(Vec3d)
      */
     static double fwdGroundTick(double motion, float inertia, float yaw, Direction.Axis axis, boolean sprint, boolean jump) {
-        float movementFactor = (0.16277136F / (inertia * inertia * inertia));
+        float movementFactor = (0.16277136F / inertia / inertia / inertia);
         float trig = (axis.getName().equals("z")) ? MathHelper.cos(yaw * 0.017453292F) : -MathHelper.sin(yaw * 0.017453292F);
         motion += movementFactor * trig * (sprint ? 0.12739 : 0.098) + ((sprint && jump) ? trig * 0.2 : 0); // 0.1274 =  0.98 * 0.13; 0.098 = 0.98 * 0.1
         return motion;
@@ -238,11 +238,18 @@ public class MovementHelper {
 
     private static Vec3d[] getTopCorners(World world, BlockPos pos) {
         VoxelShape shape = world.getBlockState(pos).getCollisionShape(world, pos);
+        double maxX = shape.getMax(Direction.Axis.X) + pos.getX() - 0.01;
+        double maxY = shape.getMax(Direction.Axis.Y) + pos.getY() + 0.01;
+        double maxZ = shape.getMax(Direction.Axis.Z) + pos.getZ() + 0.01;
+        double minX = shape.getMin(Direction.Axis.X) + pos.getX() + 0.01;
+        double minZ = shape.getMin(Direction.Axis.Z) + pos.getZ() + 0.01;
         // The - 0.01 is due to the behavior, that on the max edge of a block the raycasting misses
-        return new Vec3d[]{new Vec3d(shape.getMin(Direction.Axis.X) + pos.getX() + 0.01, shape.getMax(Direction.Axis.Y) + pos.getY() + 0.01, shape.getMin(Direction.Axis.Z) + pos.getZ() + 0.01),
-                new Vec3d(shape.getMax(Direction.Axis.X) + pos.getX() - 0.01, shape.getMax(Direction.Axis.Y) + pos.getY() + 0.01, shape.getMin(Direction.Axis.Z) + pos.getZ() + 0.01),
-                new Vec3d(shape.getMax(Direction.Axis.X) + pos.getX() - 0.01, shape.getMax(Direction.Axis.Y) + pos.getY() + 0.01, shape.getMax(Direction.Axis.Z) + pos.getZ() - 0.01),
-                new Vec3d(shape.getMin(Direction.Axis.X) + pos.getX() + 0.01, shape.getMax(Direction.Axis.Y) + pos.getY() + 0.01, shape.getMax(Direction.Axis.Z) + pos.getZ() - 0.01)};
+        return new Vec3d[] {
+            new Vec3d(minX, maxY, minZ),
+            new Vec3d(maxX, maxY, maxZ),
+            new Vec3d(maxX, maxY, maxZ),
+            new Vec3d(minX, maxY, maxZ)
+        };
     }
 
     public static boolean simulateJump(MovementDummy testSubject, Vec3d goalFocus, Box goal, boolean allowSprint, int ticks) {
