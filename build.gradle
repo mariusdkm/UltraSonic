@@ -1,7 +1,6 @@
 plugins {
     id 'fabric-loom' version '0.8-SNAPSHOT'
     id 'maven-publish'
-    id 'java'
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
@@ -43,26 +42,13 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-command-api-v1:${project.command_api_version}"
 
     // JsMacros
-    // modImplementation "xyz.wagyourtail:jsmacros-${project.jsmacros_mcversion}:${project.jsmacros_version}"
     modImplementation("com.github.wagyourtail:JSMacros:${project.jsmacros_version}") {
         transitive = false
     }
 
-
-    // https://mvnrepository.com/artifact/org.graalvm.js/js
+    // Needed for JsMacros
     implementation group: 'org.graalvm.sdk', name: 'graal-sdk', version: '20.1.0'
     implementation group: 'org.graalvm.js', name: 'js', version: '20.1.0'
-
-    // these ones are needed to build the mod because doesn't auto include sub-dependencies
-    implementation group: 'org.graalvm.truffle', name: 'truffle-api', version: '20.1.0'
-    implementation group: 'org.graalvm.regex', name: 'regex', version: '20.1.0'
-    implementation group: 'com.ibm.icu', name: 'icu4j', version: '64.2'
-
-    // needed for JsMacros
-    implementation "io.noties:prism4j:${prism_version}"
-    // //nullable not defined so...
-    // implementation 'com.google.code.findbugs:jsr305:3.0.2'
-
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
