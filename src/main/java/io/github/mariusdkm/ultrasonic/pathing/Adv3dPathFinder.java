@@ -1,5 +1,6 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import java.util.stream.IntStream;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
@@ -36,14 +37,15 @@ public class Adv3dPathFinder extends BasePathFinder {
 
         for (int y = 1; y >= maxDepthY; y--) {
             double nextXn = 0;
+            int yr = getRadius(y);
             forX:
-            for (int x = 0; x <= getRadius(y); x++) {
+            for (int x = 0; x <= yr; x++) {
                 final double xn = nextXn;
-                nextXn = (x + 1.0D) / getRadius(y);
+                nextXn = (x + 1.0D) / yr;
                 double nextZn = 0;
-                for (int z = 0; z <= getRadius(y); z++) {
+                for (int z = 0; z <= yr; z++) {
                     final double zn = nextZn;
-                    nextZn = (z + 1.0D) / getRadius(y);
+                    nextZn = (z + 1.0D) / yr;
                     if (x == 0 && z == 0) {
                         continue;
                     }
