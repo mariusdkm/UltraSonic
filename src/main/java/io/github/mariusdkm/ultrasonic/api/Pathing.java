@@ -2,6 +2,9 @@ package io.github.mariusdkm.ultrasonic.api;
 
 import io.github.mariusdkm.ultrasonic.pathing.AStar;
 import io.github.mariusdkm.ultrasonic.pathing.Node;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
@@ -19,6 +22,7 @@ import java.util.List;
 public class Pathing extends BaseLibrary {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
     private static Draw3D pathBlocks;
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
 
     public Node node;
 
@@ -32,9 +36,14 @@ public class Pathing extends BaseLibrary {
     }
 
     public boolean pathTo(int x, int y, int z, boolean allowSprint) {
-        assert mc.player != null;
-        AStar star = new AStar(mc.player, mc.player.getBlockPos().down(), new BlockPos(x, y, z), allowSprint);
-        this.node = star.findPath();
+        AtomicBoolean finished = new AtomicBoolean(false);
+        executor.execute(() -> {
+            assert mc.player != null;
+            AStar star = new AStar(mc.player, mc.player.getBlockPos().down(), new BlockPos(x, y, z), allowSprint);
+            this.node = star.findPath();
+            finished.set(true);
+        });
+        while (!finished.get()) {}
         return node != null;
     }
 
