@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.fluid.LavaFluid;
+import net.minecraft.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -33,7 +35,7 @@ public class Cache {
         /**
          * Check that the block does not override onEntityCollision like {@link net.minecraft.block.WitherRoseBlock#onEntityCollision}
          **/
-        return Arrays.stream(state.getBlock().getClass().getDeclaredMethods()).filter(method ->
+        return state.getFluidState().isEmpty() && Arrays.stream(state.getBlock().getClass().getDeclaredMethods()).filter(method ->
                 method.getName().equals("method_26180") || method.getName().equals("onEntityCollision")
         ).findFirst().isEmpty();
     }
