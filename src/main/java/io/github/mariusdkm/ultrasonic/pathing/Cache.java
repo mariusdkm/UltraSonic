@@ -3,6 +3,7 @@ package io.github.mariusdkm.ultrasonic.pathing;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public class Cache {
     public static final Cache INSTANCE = new Cache();
@@ -19,5 +20,9 @@ public class Cache {
 	    INSTANCE.WALKABLE.add(pos);
     }
 
-    // TODO: Block Event Listeners to invalidate walkable cache
+    public static boolean isWalkable(World world, BlockPos pos) {
+        return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty() &&
+                world.getBlockState(pos.up()).isAir() &&
+                world.getBlockState(pos.up(2)).isAir();
+    }
 }

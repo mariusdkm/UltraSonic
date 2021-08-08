@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.github.mariusdkm.ultrasonic.mixins",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinClientConnection"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
