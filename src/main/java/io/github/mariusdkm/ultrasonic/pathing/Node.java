@@ -26,9 +26,16 @@ public class Node {
     }
 
     public boolean isWalkable() {
-        return !player.world.getBlockState(pos).getCollisionShape(player.world, pos).isEmpty() &&
+        if (Cache.getWalkable().contains(pos) ||
+            (!player.world.getBlockState(pos).getCollisionShape(player.world, pos).isEmpty() &&
                 player.world.getBlockState(pos.up()).isAir() &&
-                player.world.getBlockState(pos.up(2)).isAir();
+                player.world.getBlockState(pos.up(2)).isAir())) {
+            Cache.addWalkable(pos);
+            return true;
+        } else {
+            Cache.getWalkable().remove(pos);
+        }
+        return false;
     }
 
     @Override
