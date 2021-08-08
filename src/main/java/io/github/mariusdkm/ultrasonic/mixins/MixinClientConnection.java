@@ -8,6 +8,7 @@ import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,14 +23,13 @@ public class MixinClientConnection {
     )
     private static void onPacketReceive(Packet<?> packet, PacketListener listener, CallbackInfo info) {
         if (MinecraftClient.getInstance().player == null) return;
+        World world = MinecraftClient.getInstance().player.world;
 
         if (packet instanceof BlockUpdateS2CPacket) {
             BlockPos pos = ((BlockUpdateS2CPacket) packet).getPos();
-            if (Cache.isWalkable(MinecraftClient.getInstance().player.world, pos)) {
-                Cache.addWalkable(pos);
-            } else {
-                Cache.getWalkable().remove(pos);
-            }
+            Cache.testWalkable(world, pos);
+            Cache.testWalkable(world, pos.down());
+            Cache.testWalkable(world, pos.down(2));
         } else if (packet instanceof UnloadChunkS2CPacket ucp) {
             Cache.getWalkable().removeAll(Cache.getWalkable().stream().filter(pos -> pos.getX() << 4 == ucp.getX() && pos.getZ() == ucp.getZ()).toList());
         }

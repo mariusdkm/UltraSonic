@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.LavaFluid;
 import net.minecraft.tag.FluidTags;
@@ -23,6 +24,14 @@ public class Cache {
             INSTANCE.WALKABLE.remove(0);
         }
 	    INSTANCE.WALKABLE.add(pos);
+    }
+
+    public static void testWalkable(World world, BlockPos pos) {
+        if (isWalkable(world, pos.down())) {
+            addWalkable(pos.down());
+        } else {
+            getWalkable().remove(pos.down());
+        }
     }
 
     public static boolean isWalkable(World world, BlockPos pos) {
