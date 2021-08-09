@@ -1,15 +1,12 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.fluid.LavaFluid;
-import net.minecraft.tag.FluidTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 public class Cache {
     public static final Cache INSTANCE = new Cache();
@@ -23,7 +20,7 @@ public class Cache {
         while (INSTANCE.WALKABLE.size() >= 256) {
             INSTANCE.WALKABLE.remove(0);
         }
-	    INSTANCE.WALKABLE.add(pos);
+        INSTANCE.WALKABLE.add(pos);
     }
 
     public static void testWalkable(World world, BlockPos pos) {
@@ -40,10 +37,10 @@ public class Cache {
                 world.getBlockState(pos.up(2)).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos.up(2)));
     }
 
+    /**
+     * Check that the block does not override onEntityCollision like {@link net.minecraft.block.WitherRoseBlock#onEntityCollision}
+     **/
     public static boolean isSafe(BlockState state) {
-        /**
-         * Check that the block does not override onEntityCollision like {@link net.minecraft.block.WitherRoseBlock#onEntityCollision}
-         **/
         return state.getFluidState().isEmpty() && Arrays.stream(state.getBlock().getClass().getDeclaredMethods()).filter(method ->
                 method.getName().equals("method_26180") || method.getName().equals("onEntityCollision")
         ).findFirst().isEmpty();

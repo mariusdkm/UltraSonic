@@ -1,13 +1,11 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
-import java.util.stream.IntStream;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
+import xyz.wagyourtail.jsmacros.client.JsMacros;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
-import xyz.wagyourtail.jsmacros.client.api.library.impl.FHud;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
 import java.util.Collection;
@@ -18,15 +16,10 @@ import java.util.Set;
 import static io.github.mariusdkm.ultrasonic.pathing.MovementHelper.*;
 
 public class Adv3dPathFinder extends BasePathFinder {
-    private final Draw3D scoreBlocks;
     private final int[] sprintJumpDist = {4, 5, 5, 6, 6, 6, 7, 7, 7, 8};
 
     public Adv3dPathFinder(BlockPos start, BlockPos goal, boolean allowSprint) {
         super(start, goal, allowSprint);
-        scoreBlocks = new Draw3D();
-        synchronized (FHud.renders) {
-            FHud.renders.add(scoreBlocks);
-        }
     }
 
     @Override
@@ -95,12 +88,14 @@ public class Adv3dPathFinder extends BasePathFinder {
         // avgWalkingSpeed = 0.21585
 //        int heuristic = (int) (newNode.pos.getSquaredDistance(goal) / 0.2);
 
-        int movementCost = 0;
+        int movementCost;
         try {
             movementCost = findMovements(newNode, currentPos);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            JsMacros.core.profile.logError(e);
+            return Integer.MAX_VALUE;
         }
+
         if (movementCost == Integer.MAX_VALUE) {
             return Integer.MAX_VALUE;
         }
@@ -116,7 +111,7 @@ public class Adv3dPathFinder extends BasePathFinder {
         return newNode.score + movementCost + heuristic;
     }
 
-    private int findMovements(Node node, BlockPos currentPos) throws InterruptedException {
+    private int findMovements(Node node, BlockPos currentPos) throws Exception {
         int cost;
         boolean directPath = isDirectPath(node.player, currentPos, node.pos);
         BlockPos blockToNode = node.pos.subtract(currentPos);
@@ -157,8 +152,8 @@ public class Adv3dPathFinder extends BasePathFinder {
             // The cornered length is outside the block, so that the player can
             jumpFocus = new Vec3d(node.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), node.pos.getZ() + 0.5)
                     .add(createFocus(node.player.world, blockToNode.multiply(-1), node.pos,
-                            0.2 + Math.max(goalArea.getXLength(), goalArea.getZLength()),
-                            Math.sqrt(2 * Math.pow(0.2 + Math.max(goalArea.getXLength(), goalArea.getZLength()) / 2, 2)),
+                            0.2 + Math.min(goalArea.getXLength(), goalArea.getZLength()),
+                            Math.sqrt(2 * Math.pow(0.2 + Math.min(goalArea.getXLength(), goalArea.getZLength()) / 2, 2)),
                             0));
         }
 
@@ -169,9 +164,8 @@ public class Adv3dPathFinder extends BasePathFinder {
             while (!goalArea.intersects(testSubject.getBoundingBox()) || !testSubject.isOnGround()) {
                 // Here the player moves towards its jumping position (runFocus),
                 // While testing whether the goal could be reached
-                if (Thread.interrupted()) {
-                    // TODO fix this
-                    throw new InterruptedException();
+                if (cost > 1200) {
+                    throw new Exception("Cost is to high");
                 }
                 if (testSubject.getY() < runFocus.getY() && testSubject.getY() < jumpFocus.getY()) {
                     // We fell down
@@ -190,7 +184,7 @@ public class Adv3dPathFinder extends BasePathFinder {
                 }
 
                 if (MovementHelper.simulateJump(testSubject.clone(), jumpFocus, goalArea, allowSprint, MovementHelper.ticksToLand(blockToNode.getY()))) {
-                    yaw = MovementHelper.angleToVec(testSubject.getPos(), jumpFocus);
+                    yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), jumpFocus);
                     newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, true, false, allowSprint);
                     testSubject.applyInput(newInput);
                     break;
@@ -213,7 +207,7 @@ public class Adv3dPathFinder extends BasePathFinder {
                 cost += 1;
                 prevTestSubject = testSubject.clone();
 
-                float yaw = MovementHelper.angleToVec(testSubject.getPos(), jumpFocus);
+                float yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), jumpFocus);
                 PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, allowSprint);
                 testSubject.applyInput(newInput);
 

@@ -1,5 +1,6 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
@@ -201,66 +202,132 @@ public class MovementHelper {
         }
     }
 
-    public static float angleToVec(Vec3d vec1, Vec3i vec2) {
+    /**
+     * Calculates the angle relative to the world, which the vector from `vec1` to `vec2` has.
+     *
+     * @param vec1 First point
+     * @param vec2 Block position
+     * @return angle
+     */
+    public static double angleToVec(Vec3d vec1, Vec3i vec2) {
         Vec3d vecToBlock = vec1.subtract(vec2.getX() + 0.5D, 0, vec2.getZ() + 0.5D).multiply(-1);
-        return (float) calcAngleDegXZ(vecToBlock);
+        return calcAngleDegXZ(vecToBlock);
     }
 
-    public static float angleToVec(Vec3d vec1, Vec3d vec2) {
-        return (float) calcAngleDegXZ(vec2.subtract(vec1));
+    /**
+     * Calculates the angle relative to the world, which the vector from `vec1` to `vec2` has.
+     *
+     * @param vec1 First point
+     * @param vec2 Second point
+     * @return angle
+     */
+    public static double angleToVec(Vec3d vec1, Vec3d vec2) {
+        return calcAngleDegXZ(vec2.subtract(vec1));
+    }
+
+    public static double angleBetweenVec(Vec3d vec1, Vec3d vec2) {
+        return Math.acos((vec1.getX() * vec2.getX() + vec1.getZ() * vec2.getZ()) / (vec1.horizontalLength() * vec2.horizontalLength()));
     }
 
     public static boolean isDirectPath(LivingEntity entity, BlockPos startBlock, BlockPos endBlock) {
-        Vec3d[] startCorners = getTopCorners(entity.world, startBlock);
-        Vec3d[] endCorners = getTopCorners(entity.world, endBlock);
-        int validStartCorners = 0;
-        for (Vec3d start : startCorners) {
-            int validEndBottomCorners = 0;
-            int validEndTopCorners = 0;
-            for (Vec3d end : endCorners) {
-                if (entity.world.raycast(new RaycastContext(start, end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity)).getType() == HitResult.Type.MISS) {
-                    validEndBottomCorners++;
+        // 0.6 = entity.getDimensions(EntityPose.STANDING).width
+        Vec3d[][] startCorners = getRaycastCorners(entity.world, startBlock, 0.6);
+        Vec3d[][] endCorners = getRaycastCorners(entity.world, endBlock, 0.6);
+        boolean shouldBrake = startCorners.length == 6 || endCorners.length == 6;
+        for (int i = 0; i < 4; i++) {
+            if (raycastHitboxFace(entity, startCorners[i], endCorners[i], false)) {
+                return true;
+            }
+            if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i + 4], false)) {
+                return true;
+            }
+            if (angleBetweenVec(startCorners[i][1].subtract(startCorners[i][0]), endCorners[i + 4][0].subtract(startCorners[i][0])) >
+                    angleBetweenVec(startCorners[i][1].subtract(startCorners[i][0]), endCorners[i + 4][1].subtract(startCorners[i][0]))) {
+                if (raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], false)) {
+                    return true;
                 }
-                if (entity.world.raycast(new RaycastContext(start.add(0, 1, 0), end.add(0, 1, 0), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity)).getType() == HitResult.Type.MISS) {
-                    validEndTopCorners++;
-                }
-                if (validEndBottomCorners >= 2 && validEndTopCorners >= 2) {
-                    validStartCorners++;
-                    break;
+            } else {
+                if (raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], true)) {
+                    return true;
                 }
             }
-            if (validStartCorners >= 2) {
-                return true;
+            if (angleBetweenVec(startCorners[i + 4][1].subtract(startCorners[i + 4][0]), endCorners[i][0].subtract(startCorners[i + 4][0])) >
+                    angleBetweenVec(startCorners[i + 4][1].subtract(startCorners[i + 4][0]), endCorners[i][1].subtract(startCorners[i + 4][0]))) {
+                if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], false)) {
+                    return true;
+                }
+            } else {
+                if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], true)) {
+                    return true;
+                }
+            }
+            if (shouldBrake && i == 1) {
+                break;
             }
         }
         return false;
     }
 
-    private static Vec3d[] getTopCorners(World world, BlockPos pos) {
+    private static Vec3d[][] getRaycastCorners(World world, BlockPos pos, double width) {
+        // This is kinda special, since we want the hitbox not to reach over the corners
         VoxelShape shape = world.getBlockState(pos).getCollisionShape(world, pos);
-        double maxX = shape.getMax(Direction.Axis.X) + pos.getX() - 0.01;
-        double maxY = shape.getMax(Direction.Axis.Y) + pos.getY() + 0.01;
-        double maxZ = shape.getMax(Direction.Axis.Z) + pos.getZ() + 0.01;
-        double minX = shape.getMin(Direction.Axis.X) + pos.getX() + 0.01;
-        double minZ = shape.getMin(Direction.Axis.Z) + pos.getZ() + 0.01;
-        // The - 0.01 is due to the behavior, that on the max edge of a block the raycasting misses
-        return new Vec3d[] {
-            new Vec3d(minX, maxY, minZ),
-            new Vec3d(maxX, maxY, maxZ),
-            new Vec3d(maxX, maxY, maxZ),
-            new Vec3d(minX, maxY, maxZ)
-        };
+        double maxX = shape.getMax(Direction.Axis.X) + pos.getX();
+        double maxY = shape.getMax(Direction.Axis.Y) + pos.getY();
+        double maxZ = shape.getMax(Direction.Axis.Z) + pos.getZ();
+        double minX = shape.getMin(Direction.Axis.X) + pos.getX();
+        double minZ = shape.getMin(Direction.Axis.Z) + pos.getZ();
+        if (maxX - minX <= width && maxZ - minZ <= width) {
+            // The block is so small, we just return the middle
+            double centerX = shape.getMin(Direction.Axis.X) + shape.getMax(Direction.Axis.X) / 2 + pos.getX();
+            double centerY = shape.getMin(Direction.Axis.Y) + shape.getMax(Direction.Axis.Y) / 2 + pos.getZ();
+            return new Vec3d[][]{
+                    {new Vec3d(centerX - width, maxY, centerY - width), new Vec3d(centerX + width, maxY, centerY - width)},
+                    {new Vec3d(centerX - width, maxY, centerY + width), new Vec3d(centerX + width, maxY, centerY + width)},
+                    {}, {},
+                    {new Vec3d(centerX - width, maxY, centerY - width), new Vec3d(centerX - width, maxY, centerY + width)},
+                    {new Vec3d(centerX + width, maxY, centerY - width), new Vec3d(centerX + width, maxY, centerY + width)}
+            };
+        } else {
+            // The order here is very important
+            return new Vec3d[][]{
+                    {new Vec3d(minX, maxY, minZ), new Vec3d(minX + width, maxY, minZ)},
+                    {new Vec3d(maxX - width, maxY, minZ), new Vec3d(maxX, maxY, minZ)},
+                    {new Vec3d(minX, maxY, maxZ), new Vec3d(minX + width, maxY, maxZ)},
+                    {new Vec3d(maxX - width, maxY, maxZ), new Vec3d(maxX, maxY, maxZ)},
+                    {new Vec3d(minX, maxY, minZ), new Vec3d(minX, maxY, minZ + width)},
+                    {new Vec3d(minX, maxY, maxZ - width), new Vec3d(minX, maxY, maxZ)},
+                    {new Vec3d(maxX, maxY, minZ), new Vec3d(maxX, maxY, minZ + width)},
+                    {new Vec3d(maxX, maxY, maxZ - width), new Vec3d(maxX, maxY, minZ)},
+            };
+        }
+    }
+
+    public static boolean raycastHitboxFace(Entity entity, Vec3d[] start, Vec3d[] end, boolean reverse) {
+        double height = 1.8;
+        if (angleToVec(start[0], end[0]) == angleToVec(start[0], start[1]) || angleToVec(start[0], end[0]) == angleToVec(start[1], start[0])) {
+            // This would mean, that we just check in one line, which is want we want prevent
+            return false;
+        }
+        for (int i = 0; i < 2; i++) {
+            if (entity.world.raycast(new RaycastContext(start[i], reverse ? end[1 - i] : end[i], RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity)).getType() != HitResult.Type.MISS) {
+                return false;
+            }
+            if (entity.world.raycast(new RaycastContext(start[i].add(0, height, 0), reverse ? end[1 - i].add(0, height, 0) : end[i].add(0, height, 0), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity)).getType() != HitResult.Type.MISS) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean simulateJump(MovementDummy testSubject, Vec3d goalFocus, Box goal, boolean allowSprint, int ticks) {
-        float yaw = MovementHelper.angleToVec(testSubject.getPos(), goalFocus);
+        float yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), goalFocus);
         testSubject.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, true, false, allowSprint));
         MovementDummy prevTestSubject;
         // We are jumping, YEET
         for (int i = 0; i < ticks - 1; i++) {
             prevTestSubject = testSubject.clone();
 
-            yaw = MovementHelper.angleToVec(testSubject.getPos(), goalFocus);
+            yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), goalFocus);
             PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, allowSprint);
             testSubject.applyInput(newInput);
 

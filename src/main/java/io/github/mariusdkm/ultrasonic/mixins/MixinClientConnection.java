@@ -17,9 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientConnection.class)
 public class MixinClientConnection {
     @Inject(
-        at = {@At("HEAD")},
-        method = {"handlePacket"},
-        cancellable = true
+            at = {@At("HEAD")},
+            method = {"handlePacket"},
+            cancellable = true
     )
     private static void onPacketReceive(Packet<?> packet, PacketListener listener, CallbackInfo info) {
         if (MinecraftClient.getInstance().player == null) return;

@@ -29,12 +29,12 @@ repositories {
 }
 
 dependencies {
-    // to change the versions see the gradle.properties file
+    // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    // partial fabric api (only needed for JsM support, normally supplied in the JsM mod)
+    // Partial fabric api (only needed for JsM support, normally supplied in the JsM mod)
     modImplementation "net.fabricmc.fabric-api:fabric-api-base:${project.api_base_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-lifecycle-events-v1:${project.lifecycle_events_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:${project.key_bind_api_version}"
@@ -47,8 +47,9 @@ dependencies {
     }
 
     // Needed for JsMacros
-    implementation group: 'org.graalvm.sdk', name: 'graal-sdk', version: '20.1.0'
-    implementation group: 'org.graalvm.js', name: 'js', version: '20.1.0'
+    implementation group: "org.graalvm.sdk", name: "graal-sdk", version: "20.1.0"
+    implementation group: "org.graalvm.js", name: "js", version: "20.1.0"
+    implementation "io.noties:prism4j:2.0.0"
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
