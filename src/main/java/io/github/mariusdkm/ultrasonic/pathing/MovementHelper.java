@@ -367,9 +367,8 @@ public class MovementHelper {
 
     public static Vec3d createFocus(World world, Vec3i blockToNode, BlockPos sourcePos, double straightLen, double diagonalLen, double corneredLen) {
         Vec3d dirVec = rotatedVec(diagonalLen, roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
-        // Optimize? thought is `(0 > dirVec.getX()) ? -1 : 1` really faster than `dirVec.getX() + 0.5` ?
-        int dirX = 0 > dirVec.getX() ? -1 : 1;
-        int dirZ = 0 > dirVec.getZ() ? -1 : 1;
+        int dirX = (int) Math.signum(dirVec.getX());
+        int dirZ = (int) Math.signum(dirVec.getZ());
         if (!world.getBlockState(sourcePos.add(dirX, 1, dirZ)).isAir() ||
                 !world.getBlockState(sourcePos.add(dirX, 2, dirZ)).isAir()) {
             // Round to 90 Deg, so that we move to one of the sides of the diagonal block

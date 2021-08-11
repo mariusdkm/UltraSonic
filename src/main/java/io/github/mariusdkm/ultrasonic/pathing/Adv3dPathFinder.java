@@ -147,12 +147,13 @@ public class Adv3dPathFinder extends BasePathFinder {
         } else {
             // We use the pos of the last node here, bc the player could still be on the corner of another block
             // The length is outside the block, so that the player can't reach it, without exiting the startArea
+            double max = Math.max(startArea.getXLength(), startArea.getZLength());
+            double sqrt = Math.sqrt(2 * Math.pow(0.3 + max / 2, 2));
             runFocus = new Vec3d(currentPos.getX() + 0.5, startArea.getMin(Direction.Axis.Y), currentPos.getZ() + 0.5)
                     .add(createFocus(node.player.world, blockToNode, currentPos,
-                            0.3 + Math.max(startArea.getXLength(), startArea.getZLength()),
-                            Math.sqrt(2 * Math.pow(0.3 + Math.max(startArea.getXLength(), startArea.getZLength()) / 2, 2)),
-                            Math.sqrt(2 * Math.pow(0.3 + Math.max(startArea.getXLength(), startArea.getZLength()) / 2, 2))));
-            // Optimize? Math.sqrt(2 * Math.pow(0.3 + Math.max(startArea.getXLength(), startArea.getZLength()) / 2, 2))
+                            0.3 + max,
+                        sqrt,
+                        sqrt));
 
             // The cornered length is outside the block, so that the player can
             jumpFocus = new Vec3d(node.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), node.pos.getZ() + 0.5)
