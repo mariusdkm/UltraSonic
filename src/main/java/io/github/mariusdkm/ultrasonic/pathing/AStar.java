@@ -21,10 +21,18 @@ public class AStar {
     private final Simple2dPathFinder simple2DPathFinder;
     private final Adv3dPathFinder adv3dPathFinder;
 
-    public AStar(ClientPlayerEntity player, BlockPos start, BlockPos goal, boolean allowSprint) {
+    public AStar(ClientPlayerEntity player, BlockPos start, BlockPos goal, boolean allowSprint) throws Exception {
         this.player = player;
         this.start = start;
         this.goal = goal;
+
+        if (!Cache.isWalkable(player.world, start)) {
+            throw new Exception("Start is not walkable!");
+        }
+        if (!Cache.isWalkable(player.world, goal)) {
+            throw new Exception("Goal is not walkable!");
+        }
+
 
         this.scoreBlocks = new Draw3D();
         synchronized (FHud.renders) {

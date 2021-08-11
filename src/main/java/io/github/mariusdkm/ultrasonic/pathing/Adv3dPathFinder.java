@@ -1,10 +1,14 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import xyz.wagyourtail.jsmacros.client.JsMacros;
+import xyz.wagyourtail.jsmacros.client.access.IChatHud;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
@@ -92,7 +96,8 @@ public class Adv3dPathFinder extends BasePathFinder {
         try {
             movementCost = findMovements(newNode, currentPos);
         } catch (Exception e) {
-            JsMacros.core.profile.logError(e);
+            MinecraftClient mc = MinecraftClient.getInstance();
+            mc.execute(() -> ((IChatHud) mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(Formatting.DARK_RED))));
             return Integer.MAX_VALUE;
         }
 
@@ -165,7 +170,7 @@ public class Adv3dPathFinder extends BasePathFinder {
                 // Here the player moves towards its jumping position (runFocus),
                 // While testing whether the goal could be reached
                 if (cost > 1200) {
-                    throw new Exception("Cost is to high");
+                    throw new Exception("Cost is to high from " + currentPos + " - " + node.pos.toString());
                 }
                 if (testSubject.getY() < runFocus.getY() && testSubject.getY() < jumpFocus.getY()) {
                     // We fell down

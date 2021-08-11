@@ -23,11 +23,13 @@ public class Cache {
         INSTANCE.WALKABLE.add(pos);
     }
 
-    public static void testWalkable(World world, BlockPos pos) {
-        if (isWalkable(world, pos.down())) {
-            addWalkable(pos.down());
+    public static boolean testWalkable(World world, BlockPos pos) {
+        if (isWalkable(world, pos)) {
+            addWalkable(pos);
+            return true;
         } else {
-            getWalkable().remove(pos.down());
+            getWalkable().remove(pos);
+            return false;
         }
     }
 

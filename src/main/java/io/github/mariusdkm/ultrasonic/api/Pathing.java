@@ -36,10 +36,16 @@ public class Pathing extends BaseLibrary {
         return path;
     }
 
-    public boolean pathTo(int x, int y, int z, boolean allowSprint) {
+    public boolean pathTo(int x, int y, int z, boolean allowSprint) throws Exception {
         assert mc.player != null;
-        AStar star = new AStar(mc.player, mc.player.getBlockPos().down(), new BlockPos(x, y, z), allowSprint);
+        // Math.ceil(mc.player.getY()) - 1 gives us the block the player is standing on
+        AStar star = new AStar(mc.player, new BlockPos(mc.player.getBlockX(), Math.ceil(mc.player.getY()) - 1, mc.player.getBlockZ()), new BlockPos(x, y, z), allowSprint);
         this.node = star.findPath();
+        if (node != null) {
+            // Just sneak for 2 ticks at the end, so that we don't fall down
+            this.node.player.applyInput(new PlayerInput(0.0F, 0.0F, 0.0F, 0.0F, false, true, false));
+            this.node.player.applyInput(new PlayerInput(0.0F, 0.0F, 0.0F, 0.0F, false, true, false));
+        }
         return node != null;
     }
 

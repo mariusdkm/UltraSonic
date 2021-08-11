@@ -26,13 +26,7 @@ public class Node {
     }
 
     public boolean isWalkable() {
-        if (Cache.getWalkable().contains(pos) || Cache.isWalkable(player.world, pos)) {
-            Cache.addWalkable(pos);
-            return true;
-        } else {
-            Cache.getWalkable().remove(pos);
-        }
-        return false;
+        return Cache.getWalkable().contains(pos) || Cache.testWalkable(player.world, pos);
     }
 
     @Override

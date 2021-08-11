@@ -103,3 +103,5 @@ publishing {
         // mavenLocal()
     }
 }
+
+apply from: 'setupRealMcAccount.gradle'
