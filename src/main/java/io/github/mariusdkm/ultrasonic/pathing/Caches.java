@@ -56,13 +56,17 @@ public class Caches {
     /**
      * Check that the block does not override onEntityCollision like {@link net.minecraft.block.WitherRoseBlock#onEntityCollision}
      **/
+    public static boolean isLikelySafe(Block block) {
+        return !INSTANCE.UNSAFE.contains(block) && isSafe(block);
+    }
+
     public static boolean isSafe(Block block) {
-        return !INSTANCE.UNSAFE.contains(block) && Arrays.stream(block.getClass().getDeclaredMethods()).filter(method ->
+        return Arrays.stream(block.getClass().getDeclaredMethods()).filter(method ->
             method.getName().equals("method_26180") || method.getName().equals("onEntityCollision")
         ).findFirst().isEmpty();
     }
 
     public static boolean isSafe(BlockState state) {
-        return state.getFluidState().isEmpty() && isSafe(state.getBlock());
+        return state.getFluidState().isEmpty() && isLikelySafe(state.getBlock());
     }
 }
