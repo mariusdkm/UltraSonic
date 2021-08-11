@@ -26,10 +26,10 @@ public class AStar {
         this.start = start;
         this.goal = goal;
 
-        if (!Cache.isWalkable(player.world, start)) {
+        if (!Caches.isWalkable(player.world, start)) {
             throw new Exception("Start is not walkable!");
         }
-        if (!Cache.isWalkable(player.world, goal)) {
+        if (!Caches.isWalkable(player.world, goal)) {
             throw new Exception("Goal is not walkable!");
         }
 

@@ -1,6 +1,7 @@
 package io.github.mariusdkm.ultrasonic.mixins;
 
-import io.github.mariusdkm.ultrasonic.pathing.Cache;
+import io.github.mariusdkm.ultrasonic.pathing.Caches;
+import java.util.concurrent.ExecutionException;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
@@ -27,11 +28,24 @@ public class MixinClientConnection {
 
         if (packet instanceof BlockUpdateS2CPacket) {
             BlockPos pos = ((BlockUpdateS2CPacket) packet).getPos();
-            Cache.testWalkable(world, pos);
-            Cache.testWalkable(world, pos.down());
-            Cache.testWalkable(world, pos.down(2));
+
+            Caches.getWalkable().invalidate(pos);
+            try {
+                // Loading caches will run the loader if value is absent in the cache.
+                // We use this fact to generate a new entry without manually writing validation here.
+                Caches.getWalkable().get(pos);
+            } catch (ExecutionException ignored) {}
+
         } else if (packet instanceof UnloadChunkS2CPacket ucp) {
-            Cache.getWalkable().removeAll(Cache.getWalkable().stream().filter(pos -> pos.getX() << 4 == ucp.getX() && pos.getZ() == ucp.getZ()).toList());
+            Caches.getWalkable().invalidateAll(
+                Caches.getWalkable()
+                    .asMap()
+                    .entrySet()
+                    .stream()
+                    .filter(
+                        entry -> entry.getKey().getX() << 4 == ucp.getX() && entry.getKey().getZ() == ucp.getZ()
+                    ).toList()
+            );
         }
     }
 }

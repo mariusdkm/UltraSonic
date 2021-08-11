@@ -1,5 +1,6 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import java.util.concurrent.ExecutionException;
 import net.minecraft.util.math.BlockPos;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
@@ -26,7 +27,12 @@ public class Node {
     }
 
     public boolean isWalkable() {
-        return Cache.getWalkable().contains(pos) || Cache.testWalkable(player.world, pos);
+        try {
+            return Caches.getWalkable().get(pos);
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override

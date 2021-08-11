@@ -1,34 +1,42 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import java.util.concurrent.TimeUnit;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public class Cache {
-    public static final Cache INSTANCE = new Cache();
-    private final List<BlockPos> WALKABLE = new ArrayList<>();
+public class Caches {
+    public static final Caches INSTANCE = new Caches();
+    private final LoadingCache<BlockPos, Boolean> WALKABLE = CacheBuilder.newBuilder()
+        .maximumSize(1024)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(
+            new CacheLoader<BlockPos, Boolean>() {
+                @Override
+                public Boolean load(BlockPos key) {
+                    assert MinecraftClient.getInstance().player != null;
+                    return isWalkable(MinecraftClient.getInstance().player.world, key);
+                }
+            }
+        );
 
-    public static List<BlockPos> getWalkable() {
+    public static LoadingCache<BlockPos, Boolean> getWalkable() {
         return INSTANCE.WALKABLE;
-    }
-
-    public static void addWalkable(BlockPos pos) {
-        while (INSTANCE.WALKABLE.size() >= 256) {
-            INSTANCE.WALKABLE.remove(0);
-        }
-        INSTANCE.WALKABLE.add(pos);
     }
 
     public static boolean testWalkable(World world, BlockPos pos) {
         if (isWalkable(world, pos)) {
-            addWalkable(pos);
+            getWalkable().put(pos, true);
             return true;
         } else {
-            getWalkable().remove(pos);
+            getWalkable().invalidate(pos);
+            getWalkable().put(pos, false);
             return false;
         }
     }
