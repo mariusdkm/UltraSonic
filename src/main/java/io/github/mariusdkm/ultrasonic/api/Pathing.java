@@ -1,7 +1,12 @@
 package io.github.mariusdkm.ultrasonic.api;
 
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.Service.State;
 import io.github.mariusdkm.ultrasonic.pathing.AStar;
 import io.github.mariusdkm.ultrasonic.pathing.Node;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
@@ -25,6 +30,7 @@ import java.util.List;
 public class Pathing extends BaseLibrary {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
     private static Draw3D pathBlocks;
+    public AStar star;
     public Node node;
 
     public static List<Node> getPath(Node currentNode) {
@@ -36,17 +42,31 @@ public class Pathing extends BaseLibrary {
         return path;
     }
 
+    public void abort() {
+        if (star == null) return;
+        star.stopAsync();
+    }
+
     public boolean pathTo(int x, int y, int z, boolean allowSprint) throws Exception {
         assert mc.player != null;
         // Math.ceil(mc.player.getY()) - 1 gives us the block the player is standing on
-        AStar star = new AStar(mc.player, new BlockPos(mc.player.getBlockX(), Math.ceil(mc.player.getY()) - 1, mc.player.getBlockZ()), new BlockPos(x, y, z), allowSprint);
-        this.node = star.findPath();
-        if (node != null) {
+        abort();
+        star = new AStar(mc.player, new BlockPos(mc.player.getBlockX(), Math.ceil(mc.player.getY()) - 1, mc.player.getBlockZ()), new BlockPos(x, y, z), allowSprint);
+        star.startAsync();
+        star.awaitTerminated();
+
+        return doPath(star.result);
+    }
+
+    private boolean doPath(Optional<Node> result) {
+        if (result.isPresent()) {
+            node = result.get();
             // Just sneak for 2 ticks at the end, so that we don't fall down
-            this.node.player.applyInput(new PlayerInput(0.0F, 0.0F, 0.0F, 0.0F, false, true, false));
-            this.node.player.applyInput(new PlayerInput(0.0F, 0.0F, 0.0F, 0.0F, false, true, false));
+            node.player.applyInput(new PlayerInput(0.0F, 0.0F, 0.0F, 0.0F, false, true, false));
+            node.player.applyInput(new PlayerInput(0.0F, 0.0F, 0.0F, 0.0F, false, true, false));
+            return true;
         }
-        return node != null;
+        return false;
     }
 
     public List<PlayerInput> getInputs() {

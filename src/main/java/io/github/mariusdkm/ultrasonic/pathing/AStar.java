@@ -1,5 +1,7 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
@@ -13,10 +15,11 @@ import java.util.Set;
 
 import static io.github.mariusdkm.ultrasonic.api.Pathing.getPath;
 
-public class AStar {
+public class AStar extends AbstractExecutionThreadService {
     private final ClientPlayerEntity player;
     private final BlockPos start;
     private final BlockPos goal;
+    public Optional<Node> result = Optional.absent();
     private final Draw3D scoreBlocks;
     private final Simple2dPathFinder simple2DPathFinder;
     private final Adv3dPathFinder adv3dPathFinder;
@@ -43,7 +46,8 @@ public class AStar {
         this.adv3dPathFinder = new Adv3dPathFinder(start, goal, allowSprint);
     }
 
-    public Node findPath() {
+    @Override
+    protected void run() throws Exception {
         PriorityQueue<Node> queue = new PriorityQueue<>(new Node.NodeComparator());
         Set<Node> closedSet = new HashSet<>();
         Draw3D closedSetBlocks = new Draw3D();
@@ -110,9 +114,6 @@ public class AStar {
         synchronized (FHud.renders) {
             FHud.renders.remove(closedSetBlocks);
         }
-        if (routeAvailable)
-            return currentNode;
-        else
-            return null;
+        result = routeAvailable ? Optional.of(currentNode) : Optional.absent();
     }
 }
