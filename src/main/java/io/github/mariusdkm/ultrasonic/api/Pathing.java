@@ -1,12 +1,8 @@
 package io.github.mariusdkm.ultrasonic.api;
 
 import com.google.common.base.Optional;
-import com.google.common.util.concurrent.Service;
-import com.google.common.util.concurrent.Service.State;
 import io.github.mariusdkm.ultrasonic.pathing.AStar;
 import io.github.mariusdkm.ultrasonic.pathing.Node;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
