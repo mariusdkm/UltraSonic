@@ -1,7 +1,7 @@
 # *¡WIP!* UltraSonic
 
 [![Platform](https://img.shields.io/badge/platform-fabric-yellow)](https://fabricmc.net)
-[![Minecraft version](https://img.shields.io/badge/minecraft_version-1.17-informational)](https://www.minecraft.net/en-us/article/caves---cliffs--part-i-out-today-java)
+[![Minecraft version](https://img.shields.io/badge/minecraft_version-1.17.1-informational)](https://www.minecraft.net/en-us/article/caves---cliffs--part-i-out-today-java)
 [![GitHub issues](https://img.shields.io/github/issues/mariusdkm/UltraSonic)](https://github.com/mariusdkm/UltraSonic/issues)
 [![GitHub license](https://img.shields.io/github/license/mariusdkm/UltraSonic)](https://github.com/mariusdkm/UltraSonic/blob/main/LICENSE.md)
 

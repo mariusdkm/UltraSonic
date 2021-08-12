@@ -72,7 +72,6 @@ public class Adv3dPathFinder extends BasePathFinder {
 
     private int getRadius(int yDepth) {
         return sprintJumpDist[-yDepth + 1];
-
     }
 
     private Node calcBlock(Node newNode, Node currentNode, Set<Node> closedSet) {
@@ -90,7 +89,7 @@ public class Adv3dPathFinder extends BasePathFinder {
         // h = distanceToGoal / avgSpeed; avgSpeed = distanceFromStart / timeSpend
         // h = distanceToGoal * timeSpend / distanceFromStart
         // avgWalkingSpeed = 0.21585
-//        int heuristic = (int) (newNode.pos.getSquaredDistance(goal) / 0.2);
+        // int heuristic = (int) (newNode.pos.getSquaredDistance(goal) / 0.2);
 
         int movementCost;
         try {

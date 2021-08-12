@@ -47,20 +47,15 @@ public class AStar extends AbstractExecutionThreadService {
     }
 
     @Override
-    protected void run() throws Exception {
+    protected void run() {
         PriorityQueue<Node> queue = new PriorityQueue<>(new Node.NodeComparator());
         Set<Node> closedSet = new HashSet<>();
-        Draw3D closedSetBlocks = new Draw3D();
-
-        synchronized (FHud.renders) {
-            FHud.renders.add(closedSetBlocks);
-        }
 
         Node currentNode = new Node(start, 0, 0, new MovementDummy(player));
         queue.add(currentNode);
 
         boolean routeAvailable = false;
-        while (!queue.isEmpty()) {
+        while (!queue.isEmpty() && isRunning()) {
             do {
                 if (queue.isEmpty()) break;
                 currentNode = queue.poll();
@@ -72,7 +67,6 @@ public class AStar extends AbstractExecutionThreadService {
                 break;
             }
 
-//            closedSetBlocks.addPoint(new PositionCommon.Pos3D(currentNode.pos.getX() + 0.5D, currentNode.pos.getY() + 0.5D, currentNode.pos.getZ() + 0.5D), 0.5, 0xfcdb03);
             for (Draw3D.Line line : scoreBlocks.getLines()) {
                 // I hope this doesn't impact the performance to much
                 scoreBlocks.removeLine(line);
@@ -109,10 +103,9 @@ public class AStar extends AbstractExecutionThreadService {
                 }
                 queue.add((Node) newNode);
             }
-
         }
         synchronized (FHud.renders) {
-            FHud.renders.remove(closedSetBlocks);
+            FHud.renders.remove(scoreBlocks);
         }
         result = routeAvailable ? Optional.of(currentNode) : Optional.absent();
     }
