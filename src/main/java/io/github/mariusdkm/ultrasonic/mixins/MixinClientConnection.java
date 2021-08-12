@@ -43,7 +43,7 @@ public class MixinClientConnection {
                     .entrySet()
                     .stream()
                     .filter(
-                        entry -> entry.getKey().getX() << 4 == ucp.getX() && entry.getKey().getZ() == ucp.getZ()
+                        entry -> entry.getKey().getX() << 4 == ucp.getX() && entry.getKey().getZ() << 4 == ucp.getZ()
                     ).toList()
             );
         }
