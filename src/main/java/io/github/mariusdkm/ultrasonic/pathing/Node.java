@@ -1,10 +1,10 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
-import java.util.concurrent.ExecutionException;
 import net.minecraft.util.math.BlockPos;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
 import java.util.Comparator;
+import java.util.concurrent.ExecutionException;
 
 public class Node {
     public BlockPos pos;

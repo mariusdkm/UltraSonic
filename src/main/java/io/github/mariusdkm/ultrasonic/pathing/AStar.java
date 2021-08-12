@@ -8,10 +8,8 @@ import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
 import xyz.wagyourtail.jsmacros.client.api.library.impl.FHud;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static io.github.mariusdkm.ultrasonic.api.Pathing.getPath;
 
@@ -19,10 +17,10 @@ public class AStar extends AbstractExecutionThreadService {
     private final ClientPlayerEntity player;
     private final BlockPos start;
     private final BlockPos goal;
-    public Optional<Node> result = Optional.absent();
     private final Draw3D scoreBlocks;
     private final Simple2dPathFinder simple2DPathFinder;
     private final Adv3dPathFinder adv3dPathFinder;
+    public Optional<Node> result = Optional.absent();
 
     public AStar(ClientPlayerEntity player, BlockPos start, BlockPos goal, boolean allowSprint) throws Exception {
         this.player = player;
@@ -84,25 +82,28 @@ public class AStar extends AbstractExecutionThreadService {
                 routeAvailable = true;
                 break;
             }
-            Collection<Node> newNodes = adv3dPathFinder.calcNode(currentNode, currentScore, closedSet);
+            List<CompletableFuture<Node>> newNodes = adv3dPathFinder.calcNode(currentNode, currentScore, closedSet);
             /* Check if the nodes already exist in the queue, and removing duplicates that are worse
                Without this, the queue would get very big
              */
-            OuterLoop:
-            for (Object newNode : newNodes.toArray()) {
-                // This is basically queue.contains(), but we immediately do smth if it's in the queue
-                for (Object oldNode : queue.toArray()) {
+            final Object[] queueArray = queue.toArray();
+            queue.addAll(newNodes.stream().map(CompletableFuture::join).map((Node newNode) -> {
+                if (newNode == null) {
+                    return null;
+                }
+                for (Object oldNode : queueArray) {
                     // Check if node already exists in the queue
                     if (oldNode.equals(newNode)) {
-                        if (((Node) oldNode).score > ((Node) newNode).score) {
+                        if (((Node) oldNode).score > (newNode).score) {
                             queue.remove(oldNode);
-                            queue.add((Node) newNode);
+                            return newNode;
+                        } else {
+                            return null;
                         }
-                        continue OuterLoop;
                     }
                 }
-                queue.add((Node) newNode);
-            }
+                return newNode;
+            }).filter(Objects::nonNull).toList());
         }
         synchronized (FHud.renders) {
             FHud.renders.remove(scoreBlocks);

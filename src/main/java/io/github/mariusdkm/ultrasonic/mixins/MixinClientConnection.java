@@ -1,7 +1,6 @@
 package io.github.mariusdkm.ultrasonic.mixins;
 
 import io.github.mariusdkm.ultrasonic.pathing.Caches;
-import java.util.concurrent.ExecutionException;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
@@ -14,6 +13,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.concurrent.ExecutionException;
 
 @Mixin(ClientConnection.class)
 public class MixinClientConnection {
@@ -34,17 +35,18 @@ public class MixinClientConnection {
                 // Loading caches will run the loader if value is absent in the cache.
                 // We use this fact to generate a new entry without manually writing validation here.
                 Caches.getWalkable().get(pos);
-            } catch (ExecutionException ignored) {}
+            } catch (ExecutionException ignored) {
+            }
 
         } else if (packet instanceof UnloadChunkS2CPacket ucp) {
             Caches.getWalkable().invalidateAll(
-                Caches.getWalkable()
-                    .asMap()
-                    .entrySet()
-                    .stream()
-                    .filter(
-                        entry -> entry.getKey().getX() << 4 == ucp.getX() && entry.getKey().getZ() << 4 == ucp.getZ()
-                    ).toList()
+                    Caches.getWalkable()
+                            .asMap()
+                            .entrySet()
+                            .stream()
+                            .filter(
+                                    entry -> entry.getKey().getX() >> 4 == ucp.getX() && entry.getKey().getZ() >> 4 == ucp.getZ()
+                            ).toList()
             );
         }
     }

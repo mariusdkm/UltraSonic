@@ -2,8 +2,9 @@ package io.github.mariusdkm.ultrasonic.pathing;
 
 import net.minecraft.util.math.BlockPos;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class BasePathFinder {
     protected final BlockPos start;
@@ -16,5 +17,5 @@ public abstract class BasePathFinder {
         this.allowSprint = allowSprint;
     }
 
-    public abstract Collection<Node> calcNode(Node currentNode, int currentScore, Set<Node> closedSet);
+    public abstract List<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet);
 }

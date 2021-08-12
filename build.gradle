@@ -16,16 +16,12 @@ repositories {
         name "Modmuss50 Repository"
         url 'https://maven.fabricmc.net/'
     }
-
-    if (project.jsmacros_mcversion.contains('.')) {
-        flatDir {
-            dirs 'libs'
-        }
-    } else {
-        maven {
-            url 'https://jitpack.io'
-        }
+    maven {
+        url 'https://jitpack.io'
     }
+//    flatDir {
+//        dirs 'libs'
+//    }
 }
 
 dependencies {

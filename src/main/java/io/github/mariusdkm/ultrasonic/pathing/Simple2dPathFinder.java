@@ -8,9 +8,10 @@ import net.minecraft.world.RaycastContext;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class Simple2dPathFinder extends BasePathFinder {
 
@@ -19,22 +20,22 @@ public class Simple2dPathFinder extends BasePathFinder {
     }
 
     @Override
-    public Collection<Node> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
-        Collection<Node> queue = new HashSet<>(8);
-        for (int x = currentNode.pos.getX() - 1; x <= currentNode.pos.getX() + 1; x += 1) {
-            for (int z = currentNode.pos.getZ() - 1; z <= currentNode.pos.getZ() + 1; z += 1) {
-                if (currentNode.pos.getX() == x && currentNode.pos.getZ() == z) {
-                    continue;
-                }
-                Node newNode = new Node(new BlockPos(x, currentNode.pos.getY(), z), 0, currentNode.distTravel, currentNode.player);
-                if (!closedSet.contains(newNode) && newNode.isWalkable()) {
-                    newNode.score = calcScore(newNode, currentScore);
-                    newNode.prevNode = currentNode;
-//                        LOGGER.info("Node x={}, y={}, z={}, score={}", newNode.pos.getX(), newNode.pos.getY(), newNode.pos.getZ(), newNode.score);
-                    queue.add(newNode);
-                }
-            }
-        }
+    public List<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
+        List<CompletableFuture<Node>> queue = new ArrayList<>();
+//        for (int x = currentNode.pos.getX() - 1; x <= currentNode.pos.getX() + 1; x += 1) {
+//            for (int z = currentNode.pos.getZ() - 1; z <= currentNode.pos.getZ() + 1; z += 1) {
+//                if (currentNode.pos.getX() == x && currentNode.pos.getZ() == z) {
+//                    continue;
+//                }
+//                Node newNode = new Node(new BlockPos(x, currentNode.pos.getY(), z), 0, currentNode.distTravel, currentNode.player);
+//                if (!closedSet.contains(newNode) && newNode.isWalkable()) {
+//                    newNode.score = calcScore(newNode, currentScore);
+//                    newNode.prevNode = currentNode;
+////                        LOGGER.info("Node x={}, y={}, z={}, score={}", newNode.pos.getX(), newNode.pos.getY(), newNode.pos.getZ(), newNode.score);
+//                    queue.add(newNode);
+//                }
+//            }
+//        }
         return queue;
     }
 

@@ -12,10 +12,10 @@ import xyz.wagyourtail.jsmacros.client.access.IChatHud;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static io.github.mariusdkm.ultrasonic.pathing.MovementHelper.*;
 
@@ -27,8 +27,8 @@ public class Adv3dPathFinder extends BasePathFinder {
     }
 
     @Override
-    public Collection<Node> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
-        Collection<Node> queue = new HashSet<>();
+    public List<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
+        List<CompletableFuture<Node>> queue = new ArrayList<>();
 
         int maxDepthY = -3;
 
@@ -53,20 +53,21 @@ public class Adv3dPathFinder extends BasePathFinder {
                         break;
                     }
 
-                    // scoreBlocks.addPoint(x + currentNode.pos.getX() + 0.5, y + currentNode.pos.getY() + 0.5, z + currentNode.pos.getZ() + 0.5, 0.5, 0x4287f5);
+                    int finalX = x;
+                    int finalZ = z;
+                    int finalY = y;
 
-                    queue.add(calcBlock(new Node(new BlockPos(x + currentNode.pos.getX(), y + currentNode.pos.getY(), z + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet));
-                    queue.add(calcBlock(new Node(new BlockPos(-x + currentNode.pos.getX(), y + currentNode.pos.getY(), -z + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet));
+                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet)));
+                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet)));
 
                     if (x != 0 && z != 0) {
                         // We don't want the points at the axis doubled
-                        queue.add(calcBlock(new Node(new BlockPos(x + currentNode.pos.getX(), y + currentNode.pos.getY(), -z + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet));
-                        queue.add(calcBlock(new Node(new BlockPos(-x + currentNode.pos.getX(), y + currentNode.pos.getY(), z + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet));
+                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet)));
+                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet)));
                     }
                 }
             }
         }
-        queue.removeAll(Collections.singleton(null));
         return queue;
     }
 
@@ -151,8 +152,8 @@ public class Adv3dPathFinder extends BasePathFinder {
             runFocus = new Vec3d(currentPos.getX() + 0.5, startArea.getMin(Direction.Axis.Y), currentPos.getZ() + 0.5)
                     .add(createFocus(node.player.world, blockToNode, currentPos,
                             0.3 + max,
-                        sqrt,
-                        sqrt));
+                            sqrt,
+                            sqrt));
 
             // The cornered length is outside the block, so that the player can
             jumpFocus = new Vec3d(node.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), node.pos.getZ() + 0.5)
@@ -169,7 +170,7 @@ public class Adv3dPathFinder extends BasePathFinder {
             while (!goalArea.intersects(testSubject.getBoundingBox()) || !testSubject.isOnGround()) {
                 // Here the player moves towards its jumping position (runFocus),
                 // While testing whether the goal could be reached
-                if (cost > 1200) {
+                if (cost > 200) {
                     throw new Exception("Cost is to high from " + currentPos + " - " + node.pos.toString());
                 }
                 if (testSubject.getY() < runFocus.getY() && testSubject.getY() < jumpFocus.getY()) {
