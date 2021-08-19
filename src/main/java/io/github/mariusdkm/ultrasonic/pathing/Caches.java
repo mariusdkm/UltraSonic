@@ -37,17 +37,6 @@ public class Caches {
         return INSTANCE.WALKABLE;
     }
 
-    public static boolean testWalkable(World world, BlockPos pos) {
-        if (isWalkable(world, pos)) {
-            getWalkable().put(pos, true);
-            return true;
-        } else {
-            getWalkable().invalidate(pos);
-            getWalkable().put(pos, false);
-            return false;
-        }
-    }
-
     public static boolean isWalkable(World world, BlockPos pos) {
         return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos)) &&
                 world.getBlockState(pos.up()).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos.up())) &&

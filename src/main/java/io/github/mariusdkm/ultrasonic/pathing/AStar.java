@@ -14,9 +14,9 @@ import java.util.concurrent.CompletableFuture;
 import static io.github.mariusdkm.ultrasonic.api.Pathing.getPath;
 
 public class AStar extends AbstractExecutionThreadService {
+    public final BlockPos start;
+    public final BlockPos goal;
     private final ClientPlayerEntity player;
-    private final BlockPos start;
-    private final BlockPos goal;
     private final Draw3D scoreBlocks;
     private final Simple2dPathFinder simple2DPathFinder;
     private final Adv3dPathFinder adv3dPathFinder;
@@ -27,13 +27,22 @@ public class AStar extends AbstractExecutionThreadService {
         this.start = start;
         this.goal = goal;
 
-        if (!Caches.isWalkable(player.world, start)) {
-            throw new Exception("Start is not walkable!");
+        if (!Caches.getWalkable().get(start)) {
+            if (!Caches.getWalkable().get(start.add(0, 1, 0))) {
+                throw new Exception("Start is not walkable!");
+            } else {
+                start = start.add(0, 1, 0);
+            }
         }
-        if (!Caches.isWalkable(player.world, goal)) {
-            throw new Exception("Goal is not walkable!");
+        if (!Caches.getWalkable().get(goal)) {
+            if (Caches.getWalkable().get(goal.add(0, 1, 0))) {
+                goal = goal.add(0, 1, 0);
+            } else if (Caches.getWalkable().get(goal.add(0, -1, 0))) {
+                goal = goal.add(0, -1, 0);
+            } else {
+                throw new Exception("Goal is not walkable!");
+            }
         }
-
 
         this.scoreBlocks = new Draw3D();
         synchronized (FHud.renders) {

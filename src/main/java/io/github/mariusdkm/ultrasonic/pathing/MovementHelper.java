@@ -367,6 +367,11 @@ public class MovementHelper {
 
     public static Vec3d createFocus(World world, Vec3i blockToNode, BlockPos sourcePos, double straightLen, double diagonalLen, double corneredLen) {
         Vec3d dirVec = rotatedVec(diagonalLen, roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
+        if (blockToNode.getX() <= 1 && blockToNode.getZ() <= 1) {
+            // It could be that the block we want to walk onto is directly in front of us
+            // in that case we just walk towards the block
+            return dirVec;
+        }
         int dirX = (int) Math.signum(dirVec.getX());
         int dirZ = (int) Math.signum(dirVec.getZ());
         if (!world.getBlockState(sourcePos.add(dirX, 1, dirZ)).isAir() ||
@@ -389,5 +394,14 @@ public class MovementHelper {
         return dirVec;
     }
 
+    public static Box createArea(World world, BlockPos pos) {
+        Box goalArea = world.getBlockState(pos).getCollisionShape(world, pos).getBoundingBox();
+        return new Box(goalArea.getMin(Direction.Axis.X) + pos.getX(),
+                goalArea.getMax(Direction.Axis.Y) + pos.getY(),
+                goalArea.getMin(Direction.Axis.Z) + pos.getZ(),
+                goalArea.getMax(Direction.Axis.X) + pos.getX(),
+                goalArea.getMax(Direction.Axis.Y) + pos.getY() + 0.5,
+                goalArea.getMax(Direction.Axis.Z) + pos.getZ());
+    }
 
 }
