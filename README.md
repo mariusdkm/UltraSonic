@@ -8,14 +8,7 @@
 UltraSonic is going to be a pathing extension for the macros mod [JsMacros](https://github.com/wagyourtail/JsMacros).  
 3d pathing is now possible;
 
-[<img src="https://i.imgur.com/8aLJBvT.mp4" width="50%">](https://i.imgur.com/8aLJBvT.mp4)
-
-![vid](https://user-images.githubusercontent.com/43829743/131727352-fe2afd61-3fbd-45fe-9527-a7145e9df2fb.mp4)
-
-<img src="https://user-images.githubusercontent.com/43829743/131728909-00ed89ea-62a1-41ff-864d-3e390978b53e.mp4"/>
-
 https://user-images.githubusercontent.com/43829743/131728909-00ed89ea-62a1-41ff-864d-3e390978b53e.mp4
-
 
 ## Installation
 
@@ -33,32 +26,38 @@ https://user-images.githubusercontent.com/43829743/131728909-00ed89ea-62a1-41ff-
 
 ## Releases
 
-None yet... come back in a couple of months if you want a working version.
+None yet... come back in a couple of months if you want a fully working version or try one of the betas.
 
 ## Beta builds  [![beta builds badge](https://github.com/mariusdkm/UltraSonic/actions/workflows/beta.yml/badge.svg?branch=main)](https://github.com/mariusdkm/UltraSonic/actions?query=branch%3Amain)
 
-For (possibly unstable) beta builds [click here](https://github.com/mariusdkm/UltraSonic/actions?query=branch%3Amain), go to the most recent action and download the Zip-file at the bottom.  
-The use the jar without `dev` or `sources` in the filename your mod.  
-(Note: You have to be logged in, to be able to download the Zip-file.)
+For (possibly unstable) beta builds [click here](https://github.com/mariusdkm/UltraSonic/actions?query=branch%3Amain), 
+go to the most recent action and download the Zip-file at the bottom.  
+Then use the jar without `dev` or `sources` in the filename as your mod jar.  
+(Note: You have to be logged in to be able to download the Zip-file.)
 
 ## Usage
 
-This mod currently adds the `Pathing` object to use in macros.  
+This mod currently adds the `Pathing` object for the usage use in macros.  
 It can be used in any language just like for example the `Player` object.
 
 ### Example
 
-1st script, pathfind
+1st script; pathfind to the block targeted by the crosshair
 ```js
 Player.setDrawPredictions(true);
+
+// Set goal here
 const goal = Player.rayTraceBlock(20, false).getBlockPos(); 
 Chat.log("Goal: " + goal);
 
 if (Pathing.pathTo(goal.getX(), goal.getY(), goal.getZ(), true)) {
     Pathing.visualizePath();
     var inputs = Pathing.getInputs();
-    //Player.predictInputs(inputs, true);
-    //Player.addInputs(inputs);
+    
+    // In order to execute the inputs directly use this code
+    // Player.predictInputs(inputs, true);
+    // Player.addInputs(inputs);
+    
     const file = FS.open("inputs.csv");
     file.write("movementForward,movementSideways,yaw,pitch,jumping,sneaking,sprinting\n")
     Chat.log("Saving inputs")
@@ -70,7 +69,7 @@ if (Pathing.pathTo(goal.getX(), goal.getY(), goal.getZ(), true)) {
 }
 ```
 
-2nd script, execute Inputs
+2nd script; execute inputs
 ```js
 const PlayerInput = Java.type("xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput")
 
@@ -84,7 +83,7 @@ Player.addInputs(inputs)
 
 If you expierence any issues or have a question or a feature request, please open an [issue](https://github.com/mariusdkm/UltraSonic/issues).
 
-Contribution are also very welcome, feel free to open a [pull request](https://github.com/mariusdkm/UltraSonic/pulls).
+Contributions are also very welcome, feel free to open a [pull request](https://github.com/mariusdkm/UltraSonic/pulls).
 
 ## FAQ
 
