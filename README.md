@@ -5,8 +5,17 @@
 [![GitHub issues](https://img.shields.io/github/issues/mariusdkm/UltraSonic)](https://github.com/mariusdkm/UltraSonic/issues)
 [![GitHub license](https://img.shields.io/github/license/mariusdkm/UltraSonic)](https://github.com/mariusdkm/UltraSonic/blob/main/LICENSE.md)
 
-UltraSonic wants to be a pathing extension for the macros mod [JsMacros](https://github.com/wagyourtail/JsMacros).  
-Currently only very simple 2d pathing is supported.
+UltraSonic is going to be a pathing extension for the macros mod [JsMacros](https://github.com/wagyourtail/JsMacros).  
+3d pathing is now possible;
+
+[<img src="https://i.imgur.com/8aLJBvT.mp4" width="50%">](https://i.imgur.com/8aLJBvT.mp4)
+
+![vid](https://user-images.githubusercontent.com/43829743/131727352-fe2afd61-3fbd-45fe-9527-a7145e9df2fb.mp4)
+
+<img src="https://user-images.githubusercontent.com/43829743/131728909-00ed89ea-62a1-41ff-864d-3e390978b53e.mp4"/>
+
+https://user-images.githubusercontent.com/43829743/131728909-00ed89ea-62a1-41ff-864d-3e390978b53e.mp4
+
 
 ## Installation
 
@@ -38,17 +47,19 @@ This mod currently adds the `Pathing` object to use in macros.
 It can be used in any language just like for example the `Player` object.
 
 ### Example
+
 1st script, pathfind
 ```js
 Player.setDrawPredictions(true);
 const goal = Player.rayTraceBlock(20, false).getBlockPos(); 
 Chat.log("Goal: " + goal);
+
 if (Pathing.pathTo(goal.getX(), goal.getY(), goal.getZ(), true)) {
     Pathing.visualizePath();
     var inputs = Pathing.getInputs();
     //Player.predictInputs(inputs, true);
     //Player.addInputs(inputs);
-    const file = FS.open("test.csv");
+    const file = FS.open("inputs.csv");
     file.write("movementForward,movementSideways,yaw,pitch,jumping,sneaking,sprinting\n")
     Chat.log("Saving inputs")
     for (const input of inputs) {  
@@ -64,7 +75,7 @@ if (Pathing.pathTo(goal.getX(), goal.getY(), goal.getZ(), true)) {
 const PlayerInput = Java.type("xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput")
 
 Chat.log("Reading inputs from file")
-let csv = FS.open("test.csv").read()
+let csv = FS.open("inputs.csv").read()
 let inputs = PlayerInput.fromCsv(csv)
 Player.addInputs(inputs)
 ```
