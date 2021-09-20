@@ -28,7 +28,7 @@ public class Node {
 
     public boolean isWalkable() {
         try {
-            return Caches.getWalkable().get(pos);
+            return Caches.WALKABLE.get(pos);
         } catch (ExecutionException e) {
             e.printStackTrace();
             return false;

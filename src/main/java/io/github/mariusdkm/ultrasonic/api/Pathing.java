@@ -27,6 +27,7 @@ import java.util.List;
 public class Pathing extends BaseLibrary {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
     private static Draw3D pathBlocks;
+    private static boolean allowDamage = false;
     public AStar star;
     public Node node;
 
@@ -37,6 +38,14 @@ public class Pathing extends BaseLibrary {
             currentNode = currentNode.prevNode;
         }
         return path;
+    }
+
+    public static boolean getAllowDamage() {
+        return Pathing.allowDamage;
+    }
+
+    public static void setAllowDamage(boolean allowDamage) {
+        Pathing.allowDamage = allowDamage;
     }
 
     public void abort() {

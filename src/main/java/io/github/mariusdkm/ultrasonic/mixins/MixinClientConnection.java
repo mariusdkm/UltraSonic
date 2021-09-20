@@ -30,17 +30,17 @@ public class MixinClientConnection {
         if (packet instanceof BlockUpdateS2CPacket) {
             BlockPos pos = ((BlockUpdateS2CPacket) packet).getPos();
 
-            Caches.getWalkable().invalidate(pos);
+            Caches.WALKABLE.invalidate(pos);
             try {
                 // Loading caches will run the loader if value is absent in the cache.
                 // We use this fact to generate a new entry without manually writing validation here.
-                Caches.getWalkable().get(pos);
+                Caches.WALKABLE.get(pos);
             } catch (ExecutionException ignored) {
             }
 
         } else if (packet instanceof UnloadChunkS2CPacket ucp) {
-            Caches.getWalkable().invalidateAll(
-                    Caches.getWalkable()
+            Caches.WALKABLE.invalidateAll(
+                    Caches.WALKABLE
                             .asMap()
                             .entrySet()
                             .stream()

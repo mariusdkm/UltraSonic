@@ -27,17 +27,17 @@ public class AStar extends AbstractExecutionThreadService {
         this.start = start;
         this.goal = goal;
 
-        if (!Caches.getWalkable().get(start)) {
-            if (!Caches.getWalkable().get(start.add(0, 1, 0))) {
+        if (!Caches.WALKABLE.get(start)) {
+            if (!Caches.WALKABLE.get(start.add(0, 1, 0))) {
                 throw new Exception("Start is not walkable!");
             } else {
                 start = start.add(0, 1, 0);
             }
         }
-        if (!Caches.getWalkable().get(goal)) {
-            if (Caches.getWalkable().get(goal.add(0, 1, 0))) {
+        if (!Caches.WALKABLE.get(goal)) {
+            if (Caches.WALKABLE.get(goal.add(0, 1, 0))) {
                 goal = goal.add(0, 1, 0);
-            } else if (Caches.getWalkable().get(goal.add(0, -1, 0))) {
+            } else if (Caches.WALKABLE.get(goal.add(0, -1, 0))) {
                 goal = goal.add(0, -1, 0);
             } else {
                 throw new Exception("Goal is not walkable!");
