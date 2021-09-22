@@ -1,10 +1,14 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import io.github.mariusdkm.ultrasonic.api.Pathing;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import xyz.wagyourtail.jsmacros.client.access.IChatHud;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
@@ -18,33 +22,6 @@ import static io.github.mariusdkm.ultrasonic.pathing.MovementHelper.*;
 
 public class Adv3dPathFinder extends BasePathFinder {
     private final int[] sprintJumpDist = {4, 5, 6, 6, 6, 6, 6, 7, 7, 7, 8};
-    private final double[][] sprintJump = {
-            {1.2522, 3.4548},
-            {1.1767, 3.7399},
-            {1.0244, 4.0248},
-            {0.7967, 4.3095},
-            {0.4952, 4.5941},
-            {0.1212, 4.8786},
-            {-0.3235, 5.1629},
-            {-0.8378, 5.4472},
-            {-1.4203, 5.7313},
-            {-2.0694, 6.0154},
-            {-2.7841, 6.2993},
-            {-3.5628, 6.5832},
-            {-4.4043, 6.8670},
-            {-5.3074, 7.1508},
-            {-6.2709, 7.4345},
-            {-7.2935, 7.7181},
-            {-8.3740, 8.0017},
-            {-9.5113, 8.2852},
-            {-10.7043, 8.5687},
-            {-11.9518, 8.8522},
-            {-13.2528, 9.1357},
-            {-14.6061, 9.4191},
-            {-16.0108, 9.7025},
-            {-17.4658, 9.9858},
-            {-18.9701, 10.269},
-            {-20.5226, 10.552}};
 
     public Adv3dPathFinder(BlockPos start, BlockPos goal, boolean allowSprint) {
         super(start, goal, allowSprint);
@@ -54,7 +31,7 @@ public class Adv3dPathFinder extends BasePathFinder {
     public List<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
         List<CompletableFuture<Node>> queue = new ArrayList<>();
 
-        int maxDepthY = -4;
+        int maxDepthY = -5;
         for (int y = 2; y >= maxDepthY; y--) {
             double nextXn = 0;
             int sprintRadius = sprintJumpDist[-y + 2];
@@ -109,23 +86,23 @@ public class Adv3dPathFinder extends BasePathFinder {
         if (!closedSet.contains(newNode) && newNode.isWalkable()) {
             Box startArea = createArea(currentNode.player.world, currentNode.pos);
             Box goalArea = createArea(newNode.player.world, newNode.pos);
-            double reach = findClosestReach(goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y));
-            Vec3d optimalJumpReach = createFocus(newNode.player.world, newNode.pos.subtract(currentNode.pos), currentNode.pos,
-                    0.8 + reach,
-                    1.13 + reach,
-                    1).add(currentNode.pos.getX() + 0.5, goalArea.getMax(Direction.Axis.Y), currentNode.pos.getZ() + 0.5);
-            if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= 1.2522 && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
-                newNode.score = calcScore(newNode, currentNode.pos, startArea, goalArea, sprint);
-                newNode.prevNode = currentNode;
-                return newNode;
+            double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
+            // -2.0695 is the maximum height a player can jump down, while -3.3462 is the max walking down
+            if (Pathing.immuneToDamage || heightDiff > -2.0695) {
+                double reach = MovementHelper.findSprintJumpReach(heightDiff);
+                Vec3d optimalJumpReach = createFocus(newNode.player.world, newNode.pos.subtract(currentNode.pos), currentNode.pos,
+                        0.8 + reach,
+                        1.13 + reach,
+                        1).add(currentNode.pos.getX() + 0.5, goalArea.getMax(Direction.Axis.Y), currentNode.pos.getZ() + 0.5);
+                if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= 1.2522 && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
+                    newNode.score = calcScore(newNode, currentNode.pos, startArea, goalArea, sprint);
+                    newNode.prevNode = currentNode;
+                    return newNode;
+                }
             }
             return null;
         }
         return null;
-    }
-
-    private double findClosestReach(double height) {
-        return sprintJump[MathHelper.binarySearch(0, sprintJump.length, (i) -> height > sprintJump[i][0])][1];
     }
 
     private int calcScore(Node newNode, BlockPos currentPos, Box startArea, Box goalArea, boolean sprint) {
@@ -163,7 +140,7 @@ public class Adv3dPathFinder extends BasePathFinder {
         int cost;
         boolean directPath = isDirectPath(node.player, currentPos, node.pos);
         BlockPos blockToNode = node.pos.subtract(currentPos);
-
+        double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
 
         // The point that is run/walked towards before jumping
         Vec3d runFocus;
@@ -195,6 +172,7 @@ public class Adv3dPathFinder extends BasePathFinder {
         if (directPath) {
             cost = 0;
             MovementDummy testSubject = node.player.clone();
+            // Note: when cloning the testSubject many attribute like verticalCollision aren't copied
             MovementDummy prevTestSubject;
             while (!goalArea.intersects(testSubject.getBoundingBox()) || !testSubject.isOnGround()) {
                 // Here the player moves towards its jumping position (runFocus),
@@ -218,39 +196,18 @@ public class Adv3dPathFinder extends BasePathFinder {
                     return Integer.MAX_VALUE;
                 }
 
-                if (MovementHelper.simulateJump(testSubject.clone(), jumpFocus, goalArea, sprint, MovementHelper.ticksToLand(blockToNode.getY()))) {
-                    yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), jumpFocus);
-                    newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, true, false, sprint);
-                    testSubject.applyInput(newInput);
-                    break;
-                } else if (!startArea.intersects(testSubject.getBoundingBox()) || !testSubject.verticalCollision) {
-                    // F*ck, we don't have enough momentum or something
-                    return Integer.MAX_VALUE;
-                    // TODO gain momentum
-                }
-            }
-            // We are jumping, YEET
-            while (!goalArea.intersects(testSubject.getBoundingBox()) || !testSubject.isOnGround()) {
-                if (testSubject.getY() < runFocus.getY() && testSubject.getY() < jumpFocus.getY()) {
-                    // We fell down
-                    return Integer.MAX_VALUE;
-                }
-                if (testSubject.isOnGround() && !goalArea.intersects(testSubject.getBoundingBox())) {
-                    // Well, we did some kind of jump, but we didn't land on our desired block
-                    return Integer.MAX_VALUE;
-                }
-                cost += 1;
                 prevTestSubject = testSubject.clone();
-
-                float yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), jumpFocus);
-                PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, sprint);
-                testSubject.applyInput(newInput);
-
-                if (testSubject.horizontalCollision && doObstacleAvoidance(testSubject, prevTestSubject, newInput, jumpFocus, sprint) == 0.0) {
-                    // We don't move at all, so something must be wrong
+                if (MovementHelper.simulateJump(testSubject, jumpFocus, goalArea, sprint, MovementHelper.ticksToLand(heightDiff))) {
+//                    yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), jumpFocus);
+//                    newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, true, false, sprint);
+//                    testSubject.applyInput(newInput);
+                    break;
+                } else if (!startArea.intersects(prevTestSubject.getBoundingBox()) || testSubject.getY() < prevTestSubject.getY()) {
+                    // This means we can't jump anymore
                     return Integer.MAX_VALUE;
+                } else {
+                    testSubject = prevTestSubject.clone();
                 }
-                // TODO more advanced air travel
             }
             applyInputs(testSubject, node);
         } else {

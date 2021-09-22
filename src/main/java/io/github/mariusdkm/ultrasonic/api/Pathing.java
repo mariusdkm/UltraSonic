@@ -26,8 +26,12 @@ import java.util.List;
 @Library("Pathing")
 public class Pathing extends BaseLibrary {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
+    /**
+     * Whether the player is immune to all kinds of damage
+     * and thus can take fall damage and path through berry bushes etc.
+     */
+    public static boolean immuneToDamage = false;
     private static Draw3D pathBlocks;
-    private static boolean allowDamage = false;
     public AStar star;
     public Node node;
 
@@ -40,12 +44,12 @@ public class Pathing extends BaseLibrary {
         return path;
     }
 
-    public static boolean getAllowDamage() {
-        return Pathing.allowDamage;
+    public boolean isImmundeToDamage() {
+        return Pathing.immuneToDamage;
     }
 
-    public static void setAllowDamage(boolean allowDamage) {
-        Pathing.allowDamage = allowDamage;
+    public void setImmundeToDamage(boolean immuneToDamage) {
+        Pathing.immuneToDamage = immuneToDamage;
     }
 
     public void abort() {

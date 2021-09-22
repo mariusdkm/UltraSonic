@@ -24,24 +24,27 @@ public class AStar extends AbstractExecutionThreadService {
 
     public AStar(ClientPlayerEntity player, BlockPos start, BlockPos goal, boolean allowSprint) throws Exception {
         this.player = player;
-        this.start = start;
-        this.goal = goal;
 
         if (!Caches.WALKABLE.get(start)) {
-            if (!Caches.WALKABLE.get(start.add(0, 1, 0))) {
-                throw new Exception("Start is not walkable!");
+            if (Caches.WALKABLE.get(start.add(0, 1, 0))) {
+                this.start = start.add(0, 1, 0);
             } else {
-                start = start.add(0, 1, 0);
+                throw new Exception("Start is not walkable!");
             }
+        } else {
+            this.start = start;
         }
+
         if (!Caches.WALKABLE.get(goal)) {
             if (Caches.WALKABLE.get(goal.add(0, 1, 0))) {
-                goal = goal.add(0, 1, 0);
+                this.goal = goal.add(0, 1, 0);
             } else if (Caches.WALKABLE.get(goal.add(0, -1, 0))) {
-                goal = goal.add(0, -1, 0);
+                this.goal = goal.add(0, -1, 0);
             } else {
                 throw new Exception("Goal is not walkable!");
             }
+        } else {
+            this.goal = goal;
         }
 
         this.scoreBlocks = new Draw3D();
@@ -49,8 +52,11 @@ public class AStar extends AbstractExecutionThreadService {
             FHud.renders.add(scoreBlocks);
         }
 
-        this.simple2DPathFinder = new Simple2dPathFinder(start, goal, allowSprint);
-        this.adv3dPathFinder = new Adv3dPathFinder(start, goal, allowSprint);
+        // TODO Temporary fix since some block updates aren't registered
+        Caches.WALKABLE.invalidateAll();
+
+        this.simple2DPathFinder = new Simple2dPathFinder(this.start, this.goal, allowSprint);
+        this.adv3dPathFinder = new Adv3dPathFinder(this.start, this.goal, allowSprint);
     }
 
     @Override

@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutionException;
 
 public class Node {
     public BlockPos pos;
-    public float slipperiness;
     public int score;
     public double distTravel;
     public MovementDummy player;
@@ -17,13 +16,8 @@ public class Node {
     public Node(BlockPos pos, int score, double distTravel, MovementDummy player) {
         this.pos = pos;
         this.player = player.clone();
-        this.slipperiness = this.player.world.getBlockState(pos).getBlock().getSlipperiness();
         this.score = score;
         this.distTravel = distTravel;
-    }
-
-    public float getSlipperiness() {
-        return slipperiness;
     }
 
     public boolean isWalkable() {

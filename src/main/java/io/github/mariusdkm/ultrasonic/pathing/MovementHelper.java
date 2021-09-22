@@ -11,6 +11,34 @@ import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
 public class MovementHelper {
+    private static final double[][] sprintJump = {
+            {1.2522, 3.4548},
+            {1.1767, 3.7399},
+            {1.0244, 4.0248},
+            {0.7967, 4.3095},
+            {0.4952, 4.5941},
+            {0.1212, 4.8786},
+            {-0.3235, 5.1629},
+            {-0.8378, 5.4472},
+            {-1.4203, 5.7313},
+            {-2.0694, 6.0154},
+            {-2.7841, 6.2993},
+            {-3.5628, 6.5832},
+            {-4.4043, 6.8670},
+            {-5.3074, 7.1508},
+            {-6.2709, 7.4345},
+            {-7.2935, 7.7181},
+            {-8.3740, 8.0017},
+            {-9.5113, 8.2852},
+            {-10.7043, 8.5687},
+            {-11.9518, 8.8522},
+            {-13.2528, 9.1357},
+            {-14.6061, 9.4191},
+            {-16.0108, 9.7025},
+            {-17.4658, 9.9858},
+            {-18.9701, 10.269},
+            {-20.5226, 10.552}};
+
     /**
      * Calculates the Y-Momentum, after t-Ticks of jumping.
      *
@@ -22,21 +50,23 @@ public class MovementHelper {
     }
 
     /**
-     * Calculate the number of ticks in the air, when jumping.
+     * Returns the maximum distance a player could the player could theoretically jump
      *
-     * @param relative how high/low to jump, relative to the start
+     * @param height how high/low to jump, relative to the start
      * @return number of ticks in the air
      */
-    static int ticksToLand(double relative) {
-        double height = 0;
-        // After 5  Ticks we reach our height point an we always land on our way down. So only start at tick 5 to go back
-        // This can be written differently
-        for (int t = 0; t < 256; t++) {
-            if (height < relative && t > 5)
-                return t;
-            height += calcJumpMomentum(t);
-        }
-        return 0;
+    static double findSprintJumpReach(double height) {
+        return sprintJump[MathHelper.binarySearch(0, sprintJump.length, (i) -> height > sprintJump[i][0])][1];
+    }
+
+    /**
+     * Calculate the number of ticks in the air, when jumping.
+     *
+     * @param height how high/low to jump, relative to the start
+     * @return number of ticks in the air
+     */
+    static int ticksToLand(double height) {
+        return MathHelper.binarySearch(0, sprintJump.length, (i) -> height > sprintJump[i][0]) + 6;
     }
 
     /**
@@ -334,10 +364,12 @@ public class MovementHelper {
             if (testSubject.horizontalCollision && doObstacleAvoidance(testSubject, prevTestSubject, newInput, goalFocus, allowSprint) == 0.0) {
                 // We don't move at all, so something must be wrong
                 return false;
+            } else if (testSubject.verticalCollision && goal.intersects(testSubject.getBoundingBox())) {
+                return true;
             }
             // TODO advanced air travel
         }
-        return goal.intersects(testSubject.getBoundingBox());
+        return false;
     }
 
     public static double doObstacleAvoidance(MovementDummy testSubject, MovementDummy prevTestSubject, PlayerInput newInput, Vec3d jumpFocus, boolean allowSprint) {
