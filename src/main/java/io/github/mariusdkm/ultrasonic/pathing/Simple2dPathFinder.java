@@ -1,5 +1,6 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
+import io.github.mariusdkm.ultrasonic.utils.MathUtils;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -57,7 +58,7 @@ public class Simple2dPathFinder extends BasePathFinder {
             while (!goal.intersects(node.player.getBoundingBox())) {
                 cost += 1;
                 Vec3d vecToBlock = node.player.getPos().subtract(node.pos.getX() + 0.5D, node.pos.getY() + 0.5D, node.pos.getZ() + 0.5D).multiply(-1);
-                float yaw = (float) (MovementHelper.calcAngleDegXZ(vecToBlock));
+                float yaw = (float) (MathUtils.calcAngleDegXZ(vecToBlock));
                 PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, allowSprint);
                 MovementDummy testSubject = node.player.clone();
                 testSubject.applyInput(newInput);
@@ -66,14 +67,14 @@ public class Simple2dPathFinder extends BasePathFinder {
                     // --> we loose momentum/speed
                     double diff = testSubject.getPos().squaredDistanceTo(node.player.getPos());
                     // That's why we move in the direction the wall pushes us, which is usually parallel to the wall
-                    yaw = (float) (MovementHelper.calcAngleDegXZ(testSubject.getVelocity()));
+                    yaw = (float) (MathUtils.calcAngleDegXZ(testSubject.getVelocity()));
                     testSubject = node.player.clone();
                     newInput.yaw = yaw;
                     testSubject.applyInput(newInput);
                     // But do we actually travel further with the new yaw?
                     if (diff > testSubject.getPos().squaredDistanceTo(node.player.getPos())) {
                         node.distTravel += diff;
-                        yaw = (float) (MovementHelper.calcAngleDegXZ(vecToBlock));
+                        yaw = (float) (MathUtils.calcAngleDegXZ(vecToBlock));
                     } else if (diff == 0.0 && testSubject.getPos().squaredDistanceTo(node.player.getPos()) == 0.0) {
                         return Integer.MAX_VALUE;
                     } else {

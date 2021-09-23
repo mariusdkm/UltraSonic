@@ -1,8 +1,8 @@
 package io.github.mariusdkm.ultrasonic.api;
 
 import io.github.mariusdkm.ultrasonic.pathing.AStar;
-import io.github.mariusdkm.ultrasonic.pathing.MovementHelper;
 import io.github.mariusdkm.ultrasonic.pathing.Node;
+import io.github.mariusdkm.ultrasonic.utils.MathUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -68,9 +68,9 @@ public class Pathing extends BaseLibrary {
         if (star.result.isPresent()) {
             node = star.result.get();
             // Just sneak for 2 ticks at the end, so that we don't fall down
-            float yaw = (float) (MovementHelper.calcAngleDegXZ(new Vec3d(star.goal.getX() - node.player.getX(), 0, star.goal.getZ() - node.player.getZ())));
+            float yaw = (float) (MathUtils.calcAngleDegXZ(new Vec3d(star.goal.getX() - node.player.getX(), 0, star.goal.getZ() - node.player.getZ())));
             node.player.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, true));
-            yaw = (float) (MovementHelper.calcAngleDegXZ(new Vec3d(star.goal.getX() - node.player.getX(), 0, star.goal.getZ() - node.player.getZ())));
+            yaw = (float) (MathUtils.calcAngleDegXZ(new Vec3d(star.goal.getX() - node.player.getX(), 0, star.goal.getZ() - node.player.getZ())));
             node.player.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, true, false));
             return true;
         }

@@ -1,6 +1,8 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
 import io.github.mariusdkm.ultrasonic.api.Pathing;
+import io.github.mariusdkm.ultrasonic.utils.MathUtils;
+import io.github.mariusdkm.ultrasonic.utils.MovementUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.mariusdkm.ultrasonic.pathing.MovementHelper.*;
+import static io.github.mariusdkm.ultrasonic.utils.MovementUtils.*;
 
 public class Adv3dPathFinder extends BasePathFinder {
     private final int[] sprintJumpDist = {4, 5, 6, 6, 6, 6, 6, 7, 7, 7, 8};
@@ -89,7 +91,7 @@ public class Adv3dPathFinder extends BasePathFinder {
             double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
             // -2.0695 is the maximum height a player can jump down, while -3.3462 is the max walking down
             if (Pathing.immuneToDamage || heightDiff > -2.0695) {
-                double reach = MovementHelper.findSprintJumpReach(heightDiff);
+                double reach = MovementUtils.findSprintJumpReach(heightDiff);
                 Vec3d optimalJumpReach = createFocus(newNode.player.world, newNode.pos.subtract(currentNode.pos), currentNode.pos,
                         0.8 + reach,
                         1.13 + reach,
@@ -187,7 +189,7 @@ public class Adv3dPathFinder extends BasePathFinder {
                 cost += 1;
                 prevTestSubject = testSubject.clone();
 
-                float yaw = (float) (MovementHelper.calcAngleDegXZ(runFocus.subtract(testSubject.getPos())));
+                float yaw = (float) (MathUtils.calcAngleDegXZ(runFocus.subtract(testSubject.getPos())));
                 PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, sprint);
                 testSubject.applyInput(newInput);
 
@@ -197,10 +199,7 @@ public class Adv3dPathFinder extends BasePathFinder {
                 }
 
                 prevTestSubject = testSubject.clone();
-                if (MovementHelper.simulateJump(testSubject, jumpFocus, goalArea, sprint, MovementHelper.ticksToLand(heightDiff))) {
-//                    yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), jumpFocus);
-//                    newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, true, false, sprint);
-//                    testSubject.applyInput(newInput);
+                if (MovementUtils.simulateJump(testSubject, jumpFocus, goalArea, sprint, MovementUtils.ticksToLand(heightDiff))) {
                     break;
                 } else if (!startArea.intersects(prevTestSubject.getBoundingBox()) || testSubject.getY() < prevTestSubject.getY()) {
                     // This means we can't jump anymore

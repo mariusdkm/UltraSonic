@@ -9,8 +9,8 @@ import org.apache.logging.log4j.Logger;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
 
 public class UltraSonic implements ModInitializer {
-    private static final Logger LOGGER = LogManager.getLogger();
     public static final boolean isJsMacrosPresent = FabricLoader.getInstance().isModLoaded("jsmacros");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
     public void onInitialize() {

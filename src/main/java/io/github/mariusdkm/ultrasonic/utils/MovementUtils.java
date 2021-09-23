@@ -1,4 +1,4 @@
-package io.github.mariusdkm.ultrasonic.pathing;
+package io.github.mariusdkm.ultrasonic.utils;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -10,7 +10,7 @@ import net.minecraft.world.World;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-public class MovementHelper {
+public class MovementUtils {
     private static final double[][] sprintJump = {
             {1.2522, 3.4548},
             {1.1767, 3.7399},
@@ -45,7 +45,7 @@ public class MovementHelper {
      * @param t number of ticks after jumping
      * @return Y-Momentum, after t-Ticks
      */
-    static double calcJumpMomentum(int t) {
+    public static double calcJumpMomentum(int t) {
         return -0.0784 * (1 - Math.pow(0.98, t)) / (1 - 0.98) + Math.pow(0.98, t) * 0.42;
     }
 
@@ -55,7 +55,7 @@ public class MovementHelper {
      * @param height how high/low to jump, relative to the start
      * @return number of ticks in the air
      */
-    static double findSprintJumpReach(double height) {
+    public static double findSprintJumpReach(double height) {
         return sprintJump[MathHelper.binarySearch(0, sprintJump.length, (i) -> height > sprintJump[i][0])][1];
     }
 
@@ -65,7 +65,7 @@ public class MovementHelper {
      * @param height how high/low to jump, relative to the start
      * @return number of ticks in the air
      */
-    static int ticksToLand(double height) {
+    public static int ticksToLand(double height) {
         return MathHelper.binarySearch(0, sprintJump.length, (i) -> height > sprintJump[i][0]) + 6;
     }
 
@@ -153,7 +153,7 @@ public class MovementHelper {
      * @param sprint  Whether to sprint or not
      * @param jump    Whether to jump int that tick or not. This gives the "jumpboost"
      * @return Motion after a Tick on the ground
-     * @see MovementHelper#jumpReach(MovementDummy, int, Direction.Axis, boolean)
+     * @see MovementUtils#jumpReach(MovementDummy, int, Direction.Axis, boolean)
      * @see net.minecraft.entity.player.PlayerEntity#travel(Vec3d)
      */
     static double fwdGroundTick(double motion, float inertia, float yaw, Direction.Axis axis, boolean sprint, boolean jump) {
@@ -169,7 +169,7 @@ public class MovementHelper {
 //        return motion;
 //    }
 
-    static Box jumpDistance(MovementDummy player, int ticks, float yaw, boolean sprinting) {
+    public static Box jumpDistance(MovementDummy player, int ticks, float yaw, boolean sprinting) {
         MovementDummy testSubject = player.clone();
         testSubject.applyInput(new PlayerInput(1, 0, yaw, 0, true, false, sprinting));
         for (int i = 0; i < ticks - 2; i++) {
@@ -191,7 +191,7 @@ public class MovementHelper {
      * @param sprint Whether to sprint or not
      * @param jump   Whether to jump int that tick or not. This gives the "jumpboost"
      * @return Motion after a Tick on the ground
-     * @see MovementHelper#jumpReach(MovementDummy, int, Direction.Axis, boolean)
+     * @see MovementUtils#jumpReach(MovementDummy, int, Direction.Axis, boolean)
      * @see net.minecraft.entity.player.PlayerEntity#travel(Vec3d)
      */
     static Vec3d groundTick(MovementDummy player, boolean sprint, boolean jump) {
@@ -203,61 +203,6 @@ public class MovementHelper {
 
 //    public static ArrayList<PlayerInput> walkToCorner(MovementDummy player, double goalAngle, int corner) {
 //    }
-
-    public static double calcAngleDegXZ(Vec3d vec) {
-        return Math.atan2(vec.getZ(), vec.getX()) * 180.0D / Math.PI - 90.0D;
-    }
-
-    public static double calcAngleRadXZ(Vec3i vec) {
-        return Math.atan2(vec.getZ(), vec.getX()) - Math.PI / 2.0;
-    }
-
-    public static double roundRad(Vec3i vec3i, double roundTo, double shift) {
-        return Math.round((MovementHelper.calcAngleRadXZ(vec3i) + shift) * 1 / roundTo) * roundTo - shift;
-    }
-
-    public static Vec3d rotatedVec(double len, double rad) {
-        // our vec is (len|0|0)
-        // x' = xcos(θ) − ysin(θ)
-        // y' = xsin(θ) + ycos(θ)
-        // return new Vec3d(len * Math.cos(rad), 0, len * Math.sin(rad));
-        return new Vec3d(-len * Math.sin(rad), 0, len * Math.cos(rad));
-    }
-
-    public static Vec3d vec3dFromBlockPos(BlockPos pos, boolean treatAsBlockPos) {
-        if (treatAsBlockPos) {
-            return new Vec3d(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
-        } else {
-            return new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-        }
-    }
-
-    /**
-     * Calculates the angle relative to the world, which the vector from `vec1` to `vec2` has.
-     *
-     * @param vec1 First point
-     * @param vec2 Block position
-     * @return angle
-     */
-    public static double angleToVec(Vec3d vec1, Vec3i vec2) {
-        Vec3d vecToBlock = vec1.subtract(vec2.getX() + 0.5D, 0, vec2.getZ() + 0.5D).multiply(-1);
-        return calcAngleDegXZ(vecToBlock);
-    }
-
-    /**
-     * Calculates the angle relative to the world, which the vector from `vec1` to `vec2` has.
-     *
-     * @param vec1 First point
-     * @param vec2 Second point
-     * @return angle
-     */
-    public static double angleToVec(Vec3d vec1, Vec3d vec2) {
-        return calcAngleDegXZ(vec2.subtract(vec1));
-    }
-
-    public static double angleBetweenVec(Vec3d vec1, Vec3d vec2) {
-        return Math.acos((vec1.getX() * vec2.getX() + vec1.getZ() * vec2.getZ()) / (vec1.horizontalLength() * vec2.horizontalLength()));
-    }
 
     public static boolean isDirectPath(LivingEntity entity, BlockPos startBlock, BlockPos endBlock) {
         // 0.6 = entity.getDimensions(EntityPose.STANDING).width
@@ -271,8 +216,8 @@ public class MovementHelper {
             if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i + 4], false)) {
                 return true;
             }
-            if (angleBetweenVec(startCorners[i][1].subtract(startCorners[i][0]), endCorners[i + 4][0].subtract(startCorners[i][0])) >
-                    angleBetweenVec(startCorners[i][1].subtract(startCorners[i][0]), endCorners[i + 4][1].subtract(startCorners[i][0]))) {
+            if (MathUtils.angleBetweenVec(startCorners[i][1].subtract(startCorners[i][0]), endCorners[i + 4][0].subtract(startCorners[i][0])) >
+                    MathUtils.angleBetweenVec(startCorners[i][1].subtract(startCorners[i][0]), endCorners[i + 4][1].subtract(startCorners[i][0]))) {
                 if (raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], false)) {
                     return true;
                 }
@@ -281,8 +226,8 @@ public class MovementHelper {
                     return true;
                 }
             }
-            if (angleBetweenVec(startCorners[i + 4][1].subtract(startCorners[i + 4][0]), endCorners[i][0].subtract(startCorners[i + 4][0])) >
-                    angleBetweenVec(startCorners[i + 4][1].subtract(startCorners[i + 4][0]), endCorners[i][1].subtract(startCorners[i + 4][0]))) {
+            if (MathUtils.angleBetweenVec(startCorners[i + 4][1].subtract(startCorners[i + 4][0]), endCorners[i][0].subtract(startCorners[i + 4][0])) >
+                    MathUtils.angleBetweenVec(startCorners[i + 4][1].subtract(startCorners[i + 4][0]), endCorners[i][1].subtract(startCorners[i + 4][0]))) {
                 if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], false)) {
                     return true;
                 }
@@ -334,7 +279,7 @@ public class MovementHelper {
 
     public static boolean raycastHitboxFace(Entity entity, Vec3d[] start, Vec3d[] end, boolean reverse) {
         double height = 1.8;
-        if (angleToVec(start[0], end[0]) == angleToVec(start[0], start[1]) || angleToVec(start[0], end[0]) == angleToVec(start[1], start[0])) {
+        if (MathUtils.angleToVec(start[0], end[0]) == MathUtils.angleToVec(start[0], start[1]) || MathUtils.angleToVec(start[0], end[0]) == MathUtils.angleToVec(start[1], start[0])) {
             // This would mean, that we just check in one line, which is want we want prevent
             return false;
         }
@@ -350,14 +295,14 @@ public class MovementHelper {
     }
 
     public static boolean simulateJump(MovementDummy testSubject, Vec3d goalFocus, Box goal, boolean allowSprint, int ticks) {
-        float yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), goalFocus);
+        float yaw = (float) MathUtils.angleToVec(testSubject.getPos(), goalFocus);
         testSubject.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, true, false, allowSprint));
         MovementDummy prevTestSubject;
         // We are jumping, YEET
         for (int i = 0; i < ticks - 1; i++) {
             prevTestSubject = testSubject.clone();
 
-            yaw = (float) MovementHelper.angleToVec(testSubject.getPos(), goalFocus);
+            yaw = (float) MathUtils.angleToVec(testSubject.getPos(), goalFocus);
             PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, allowSprint);
             testSubject.applyInput(newInput);
 
@@ -380,13 +325,13 @@ public class MovementHelper {
             testSubject = prevTestSubject.clone();
 
             // That's why we move in the direction the wall pushes us, which is usually parallel to the wall
-            newInput.yaw = (float) (MovementHelper.calcAngleDegXZ(testSubject.getVelocity()));
+            newInput.yaw = (float) (MathUtils.calcAngleDegXZ(testSubject.getVelocity()));
             testSubject.applyInput(newInput);
 
             // But do we actually travel further with the new yaw?
             if (diff > testSubject.getPos().squaredDistanceTo(prevTestSubject.getPos())) {
                 // Nope, so do the same as before
-                newInput = new PlayerInput(1.0F, 0.0F, MovementHelper.angleToVec(testSubject.getPos(), jumpFocus), 0.0F, false, false, allowSprint);
+                newInput = new PlayerInput(1.0F, 0.0F, MathUtils.angleToVec(testSubject.getPos(), jumpFocus), 0.0F, false, false, allowSprint);
                 testSubject.applyInput(newInput);
                 return diff;
             } else {
@@ -398,7 +343,7 @@ public class MovementHelper {
     }
 
     public static Vec3d createFocus(World world, Vec3i blockToNode, BlockPos sourcePos, double straightLen, double diagonalLen, double corneredLen) {
-        Vec3d dirVec = rotatedVec(diagonalLen, roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
+        Vec3d dirVec = MathUtils.rotatedVec(diagonalLen, MathUtils.roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
         if (blockToNode.getX() <= 1 && blockToNode.getZ() <= 1) {
             // It could be that the block we want to walk onto is directly in front of us
             // in that case we just walk towards the block
@@ -409,7 +354,7 @@ public class MovementHelper {
         if (!world.getBlockState(sourcePos.add(dirX, 1, dirZ)).isAir() ||
                 !world.getBlockState(sourcePos.add(dirX, 2, dirZ)).isAir()) {
             // Round to 90 Deg, so that we move to one of the sides of the diagonal block
-            dirVec = rotatedVec(straightLen, roundRad(blockToNode, Math.PI / 2, 0.0));
+            dirVec = MathUtils.rotatedVec(straightLen, MathUtils.roundRad(blockToNode, Math.PI / 2, 0.0));
         }
         if (!world.getBlockState(sourcePos.add(dirX, 1, 0)).isAir() ||
                 !world.getBlockState(sourcePos.add(dirX, 2, 0)).isAir()) {
@@ -421,7 +366,7 @@ public class MovementHelper {
         }
         if (dirVec.getX() == 0 && dirVec.getZ() == 0) {
             // There are blocks on either side of our focus
-            dirVec = rotatedVec(corneredLen, roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
+            dirVec = MathUtils.rotatedVec(corneredLen, MathUtils.roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
         }
         return dirVec;
     }
