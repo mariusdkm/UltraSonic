@@ -343,8 +343,13 @@ public class MovementUtils {
     }
 
     public static Vec3d createFocus(World world, Vec3i blockToNode, BlockPos sourcePos, double straightLen, double diagonalLen, double corneredLen) {
-        Vec3d dirVec = MathUtils.rotatedVec(diagonalLen, MathUtils.roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
-        if (blockToNode.getX() <= 1 && blockToNode.getZ() <= 1) {
+        Vec3d dirVec;
+        if (blockToNode.getX() == 0 || blockToNode.getZ() == 0) {
+            dirVec = MathUtils.rotatedVec(diagonalLen, MathUtils.roundRad(blockToNode, Math.PI / 2, 0));
+        } else {
+            dirVec = MathUtils.rotatedVec(diagonalLen, MathUtils.roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
+        }
+        if (Math.abs(blockToNode.getX()) <= 1 && Math.abs(blockToNode.getZ()) <= 1) {
             // It could be that the block we want to walk onto is directly in front of us
             // in that case we just walk towards the block
             return dirVec;

@@ -201,8 +201,8 @@ public class Adv3dPathFinder extends BasePathFinder {
                 prevTestSubject = testSubject.clone();
                 if (MovementUtils.simulateJump(testSubject, jumpFocus, goalArea, sprint, MovementUtils.ticksToLand(heightDiff))) {
                     break;
-                } else if (!startArea.intersects(prevTestSubject.getBoundingBox()) || testSubject.getY() < prevTestSubject.getY()) {
-                    // This means we can't jump anymore
+                } else if (!startArea.intersects(prevTestSubject.getBoundingBox())) {
+                    // We only want to check jumps from the startArea
                     return Integer.MAX_VALUE;
                 } else {
                     testSubject = prevTestSubject.clone();
