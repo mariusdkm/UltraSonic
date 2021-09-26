@@ -7,7 +7,9 @@ import net.minecraft.util.math.Vec3i;
 
 public class MathUtils {
     private static final float PI = 3.141592653589793f;
+    private static final float INVPI = 1/PI;
     private static final float TAU = 2.0f * PI;
+    private static final float INVTAU = 1/TAU;
 
     public static double calcAngleDegXZ(Vec3d vec) {
         return atan2((float) vec.getZ(), (float) vec.getX()) * 180.0D / Math.PI - 90.0D;
@@ -75,13 +77,10 @@ public class MathUtils {
      * @return sinus
      */
     public static float f_sin(float radians) {
-        float x = radians - (int) (radians / TAU) * TAU;
-        if (x > PI) {
-            x -= TAU;
-        }
-        x = 4.0f * x / PI * (1 - Math.abs(x) / PI);
+        float x = radians - (int)((radians + PI) * INVTAU) * TAU;
 
-        return 0.224f * (x * Math.abs(x) - x) + x;
+        x = 4.0f * x * INVPI * (Math.fma(-Math.abs(x), INVPI, 1.0f));
+        return Math.fma(0.224f * x, Math.abs(x), 0.776f);
     }
 
     /**
@@ -92,18 +91,11 @@ public class MathUtils {
      * Absolute error <= 6.7e-5
      **/
     private static float acos(float x) {
-        float negate = Math.signum(x);
+        float negate = (x < 0) ? 1 : 0;
         x = Math.abs(x);
-        float ret = -0.0187293f;
-        ret = ret * x;
-        ret = ret + 0.0742610f;
-        ret = ret * x;
-        ret = ret - 0.2121144f;
-        ret = ret * x;
-        ret = ret + 1.5707288f;
-        ret = ret * MathHelper.sqrt(1.0f - x);
-        ret = ret - 2 * negate * ret;
-        return negate * PI + ret;
+        float ret = Math.fma(Math.fma(Math.fma(-0.0187293f, x, 0.0742610f), x, -0.2121144f), x, PI / 2) * (float)(Math.sqrt(1.0 - x));
+        ret = Math.fma(2 * ret, negate, -ret);
+        return Math.fma(negate, PI, ret);
     }
 
 
@@ -111,28 +103,25 @@ public class MathUtils {
      * Source: https://developer.download.nvidia.com/cg/atan2.html
      **/
     private static float atan2(float y, float x) {
-        float t0, t1, t3, t4;
-
-        t3 = Math.abs(x);
-        t1 = Math.abs(y);
-        t0 = Math.max(t3, t1);
+        float t3 = Math.abs(x);
+        float t1 = Math.abs(y);
+        float t0 = Math.max(t3, t1);
         t1 = Math.min(t3, t1);
         t3 = 1f / t0;
         t3 = t1 * t3;
 
-        t4 = t3 * t3;
-        t0 = -0.013480470f;
-        t0 = t0 * t4 + 0.057477314f;
-        t0 = t0 * t4 - 0.121239071f;
-        t0 = t0 * t4 + 0.195635925f;
-        t0 = t0 * t4 - 0.332994597f;
-        t0 = t0 * t4 + 0.999995630f;
+        float t4 = t3 * t3;
+        t0 =                  -0.013480470f;
+        t0 = Math.fma(t0, t4,  0.057477314f);
+        t0 = Math.fma(t0, t4, -0.121239071f);
+        t0 = Math.fma(t0, t4,  0.195635925f);
+        t0 = Math.fma(t0, t4, -0.332994597f);
+        t0 = Math.fma(t0, t4,  0.999995630f);
         t3 = t0 * t3;
 
-        t3 = (Math.abs(y) > Math.abs(x)) ? 1.570796327f - t3 : t3;
-        t3 = (x < 0) ? 3.141592654f - t3 : t3;
-        t3 = (y < 0) ? -t3 : t3;
+        t3 = (abs(y) > Math.abs(x)) ? Math.fma(PI, 0.5f, -t3) : t3;
+        t3 = (x < 0) ?  PI - t3 : t3;
 
-        return t3;
+        return (y < 0) ? -t3 : t3;
     }
 }
