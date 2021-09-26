@@ -6,10 +6,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 
 public class MathUtils {
-    private static final float PI = 3.141592653589793f;
-    private static final float INVPI = 1/PI;
-    private static final float TAU = 2.0f * PI;
-    private static final float INVTAU = 1/TAU;
+
+    
 
     public static double calcAngleDegXZ(Vec3d vec) {
         return atan2((float) vec.getZ(), (float) vec.getX()) * 180.0D / Math.PI - 90.0D;
@@ -80,7 +78,7 @@ public class MathUtils {
         float x = radians - (int)((radians + PI) * INVTAU) * TAU;
 
         x = 4.0f * x * INVPI * (Math.fma(-Math.abs(x), INVPI, 1.0f));
-        return Math.fma(0.224f * x, Math.abs(x), 0.776f);
+        return x * Math.fma(0.224f, Math.abs(x), 0.776f);
     }
 
     /**
