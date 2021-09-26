@@ -119,7 +119,7 @@ public class MathUtils {
         t0 = Math.fma(t0, t4,  0.999995630f);
         t3 = t0 * t3;
 
-        t3 = (abs(y) > Math.abs(x)) ? Math.fma(PI, 0.5f, -t3) : t3;
+        t3 = (Math.abs(y) > Math.abs(x)) ? Math.fma(PI, 0.5f, -t3) : t3;
         t3 = (x < 0) ?  PI - t3 : t3;
 
         return (y < 0) ? -t3 : t3;
