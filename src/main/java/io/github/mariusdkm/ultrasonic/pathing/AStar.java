@@ -10,6 +10,7 @@ import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import static io.github.mariusdkm.ultrasonic.api.Pathing.getPath;
 
@@ -61,7 +62,7 @@ public class AStar extends AbstractExecutionThreadService {
 
     @Override
     protected void run() {
-        PriorityQueue<Node> queue = new PriorityQueue<>(new Node.NodeComparator());
+        Queue<Node> queue = new PriorityBlockingQueue<>(50, new Node.NodeComparator());
         Set<Node> closedSet = new HashSet<>();
 
         Node currentNode = new Node(start, 0, 0, new MovementDummy(player));
@@ -101,15 +102,15 @@ public class AStar extends AbstractExecutionThreadService {
             /* Check if the nodes already exist in the queue, and removing duplicates that are worse
                Without this, the queue would get very big
              */
-            final Object[] queueArray = queue.toArray();
-            queue.addAll(newNodes.stream().map(CompletableFuture::join).map((Node newNode) -> {
+            final Node[] queueArray = queue.toArray(new Node[0]);
+            queue.addAll(newNodes.stream().parallel().map(CompletableFuture::join).map((Node newNode) -> {
                 if (newNode == null) {
                     return null;
                 }
-                for (Object oldNode : queueArray) {
+                for (Node oldNode : queueArray) {
                     // Check if node already exists in the queue
                     if (oldNode.equals(newNode)) {
-                        if (((Node) oldNode).score > (newNode).score) {
+                        if (oldNode.score > newNode.score) {
                             queue.remove(oldNode);
                             return newNode;
                         } else {

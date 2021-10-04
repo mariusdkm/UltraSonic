@@ -31,7 +31,7 @@ public class Pathing extends BaseLibrary {
      * and thus can take fall damage and path through berry bushes etc.
      */
     public static boolean immuneToDamage = false;
-    private static Draw3D pathBlocks;
+    public static Draw3D pathBlocks;
     public AStar star;
     public Node node;
 

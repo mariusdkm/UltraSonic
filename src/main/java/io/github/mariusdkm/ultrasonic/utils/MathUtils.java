@@ -76,7 +76,7 @@ public class MathUtils {
      * @return sinus
      */
     public static float f_sin(float radians) {
-        float x = radians - (int) ((radians + PI) * INVTAU) * TAU;
+        float x = radians - (float) Math.floor((radians + PI) * INVTAU) * TAU;
 
         x = 4.0f * x * INVPI * (Math.fma(-Math.abs(x), INVPI, 1.0f));
         return x * Math.fma(0.224f, Math.abs(x), 0.776f);
