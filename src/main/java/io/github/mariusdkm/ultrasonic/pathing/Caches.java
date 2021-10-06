@@ -22,6 +22,7 @@ public class Caches {
             CampfireBlock.class,
             SweetBerryBushBlock.class
     );
+
     public static final LoadingCache<BlockPos, Boolean> WALKABLE = CacheBuilder.newBuilder()
             .maximumSize(1024)
             .expireAfterWrite(1, TimeUnit.MINUTES)

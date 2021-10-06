@@ -15,9 +15,7 @@ import xyz.wagyourtail.jsmacros.client.access.IChatHud;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static io.github.mariusdkm.ultrasonic.utils.MovementUtils.*;
@@ -30,25 +28,24 @@ public class Adv3dPathFinder extends BasePathFinder {
     }
 
     @Override
-    public List<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
-        List<CompletableFuture<Node>> queue = new ArrayList<>();
+    public Queue<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
+        Queue<CompletableFuture<Node>> queue = new ArrayDeque<>();
 
         int maxDepthY = -5;
         for (int y = 2; y >= maxDepthY; y--) {
             double nextXn = 0;
             int sprintRadius = sprintJumpDist[-y + 2];
             // int walkRadius = sprintRadius / 2;
-            forX:
-            for (int x = 0; x <= sprintRadius; x++) {
-                final double xn = nextXn;
-                nextXn = (x + 1.0D) / sprintRadius;
+            forX: for (int x = 0; x <= sprintRadius; x++) {
+                double xn = nextXn;
+                nextXn = (x + 1.0) / sprintRadius;
                 double nextZn = 0;
                 for (int z = 0; z <= sprintRadius; z++) {
-                    final double zn = nextZn;
-                    nextZn = (z + 1.0D) / sprintRadius;
                     if (x == 0 && z == 0) {
                         continue;
                     }
+                    double zn = nextZn;
+                    nextZn = (z + 1.0) / sprintRadius;
                     if ((xn * xn) + (zn * zn) > 1) {
                         if (z == 0) {
                             break forX;
@@ -56,16 +53,24 @@ public class Adv3dPathFinder extends BasePathFinder {
                         break;
                     }
 
-                    int finalX = x;
-                    int finalZ = z;
-                    int finalY = y;
-                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
-                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
+                    final int finalX = x;
+                    final int finalZ = z;
+                    final int finalY = y;
+                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
+                            new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(),finalZ + currentNode.pos.getZ()),
+                            currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
+                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
+                            new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(),-finalZ + currentNode.pos.getZ()),
+                            currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
 
                     if (x != 0 && z != 0) {
                         // We don't want the points at the axis doubled
-                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
-                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
+                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
+                                new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(),-finalZ + currentNode.pos.getZ()),
+                                currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
+                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
+                                new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(),finalZ + currentNode.pos.getZ()),
+                                currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
                     }
 
 //                    if ((x * x) + (z * z) < walkRadius) {
@@ -96,7 +101,9 @@ public class Adv3dPathFinder extends BasePathFinder {
                         0.8 + reach,
                         1.13 + reach,
                         1).add(currentNode.pos.getX() + 0.5, goalArea.getMax(Direction.Axis.Y), currentNode.pos.getZ() + 0.5);
-                if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= 1.2522 && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
+                double jumpHeight = 1.2522;
+                if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= jumpHeight
+                        && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
                     newNode.score = calcScore(newNode, currentNode.pos, startArea, goalArea, sprint);
                     newNode.prevNode = currentNode;
                     return newNode;
@@ -138,7 +145,7 @@ public class Adv3dPathFinder extends BasePathFinder {
         return newNode.score + movementCost + heuristic;
     }
 
-    private int findMovements(Node node, BlockPos currentPos, Box startArea, Box goalArea, boolean sprint) throws Exception {
+    private int findMovements(Node node, BlockPos currentPos, Box startArea, Box goalArea, boolean sprint) {
         int cost;
         boolean directPath = isDirectPath(node.player, currentPos, node.pos);
         BlockPos blockToNode = node.pos.subtract(currentPos);
@@ -153,9 +160,10 @@ public class Adv3dPathFinder extends BasePathFinder {
             runFocus = new Vec3d(node.pos.getX() + 0.5, startArea.getMin(Direction.Axis.Y), node.pos.getZ() + 0.5);
             jumpFocus = new Vec3d(node.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), node.pos.getZ() + 0.5);
         } else {
-            // We use the pos of the last node here, bc the player could still be on the corner of another block
+            // We use the pos of the last node here, because the player could still be on the corner of another block
             // The length is outside the block, so that the player can't reach it, without exiting the startArea
             double max = Math.max(startArea.getXLength(), startArea.getZLength());
+            // Root of what?
             double sqrt = Math.sqrt(2 * Math.pow(0.3 + max / 2, 2));
             runFocus = new Vec3d(currentPos.getX() + 0.5, startArea.getMin(Direction.Axis.Y), currentPos.getZ() + 0.5)
                     .add(createFocus(node.player.world, blockToNode, currentPos,
@@ -171,56 +179,56 @@ public class Adv3dPathFinder extends BasePathFinder {
                             0));
         }
 
-        if (directPath) {
-            cost = 0;
-            MovementDummy testSubject = node.player.clone();
-            // Note: when cloning the testSubject many attribute like verticalCollision aren't copied
-            MovementDummy prevTestSubject;
-            while (!goalArea.intersects(testSubject.getBoundingBox()) || !testSubject.isOnGround()) {
-                // Here the player moves towards its jumping position (runFocus),
-                // While testing whether the goal could be reached
-                if (cost > 200) {
-                    throw new Exception("Cost is to high from " + currentPos + " - " + node.pos.toString());
-                }
-                if (testSubject.getY() < runFocus.getY() && testSubject.getY() < jumpFocus.getY()) {
-                    // We fell down
-                    return Integer.MAX_VALUE;
-                }
-                cost += 1;
-                prevTestSubject = testSubject.clone();
-
-                float yaw = (float) (MathUtils.calcAngleDegXZ(runFocus.subtract(testSubject.getPos())));
-                PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, sprint);
-                testSubject.applyInput(newInput);
-
-                if (testSubject.horizontalCollision && doObstacleAvoidance(testSubject, prevTestSubject, newInput, jumpFocus, sprint) == 0.0) {
-                    // We don't move at all, so something must be wrong
-                    return Integer.MAX_VALUE;
-                }
-
-                prevTestSubject = testSubject.clone();
-                if (MovementUtils.simulateJump(testSubject, jumpFocus, goalArea, sprint, MovementUtils.ticksToLand(heightDiff))) {
-                    break;
-                } else if (!startArea.intersects(prevTestSubject.getBoundingBox())) {
-                    // We only want to check jumps from the startArea
-                    return Integer.MAX_VALUE;
-                } else {
-                    testSubject = prevTestSubject.clone();
-                }
-            }
-            applyInputs(testSubject, node);
-        } else {
-            cost = Integer.MAX_VALUE;
+        if (!directPath) {
+            return Integer.MAX_VALUE;
         }
+
+        cost = 0;
+        MovementDummy testSubject = node.player.clone();
+        // Note: when cloning the testSubject many attribute like verticalCollision aren't copied
+        MovementDummy prevTestSubject;
+        while (!goalArea.intersects(testSubject.getBoundingBox()) || !testSubject.isOnGround()) {
+            // Here the player moves towards its jumping position (runFocus),
+            // While testing whether the goal could be reached
+            if (cost > 200) {
+                throw new IllegalStateException("Cost is to high from " + currentPos + " - " + node.pos.toString());
+            }
+            if (testSubject.getY() < runFocus.getY() && testSubject.getY() < jumpFocus.getY()) {
+                // We fell down
+                return Integer.MAX_VALUE;
+            }
+            cost++;
+            prevTestSubject = testSubject.clone();
+
+            float yaw = (float) (MathUtils.calcAngleDegXZ(runFocus.subtract(testSubject.getPos())));
+            PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, sprint);
+            testSubject.applyInput(newInput);
+
+            if (testSubject.horizontalCollision && Math.abs(doObstacleAvoidance(testSubject, prevTestSubject, newInput, jumpFocus, sprint)) < 2 * Double.MIN_VALUE) {
+                // We don't move at all, so something must be wrong
+                return Integer.MAX_VALUE;
+            }
+
+            prevTestSubject = testSubject.clone();
+            if (MovementUtils.simulateJump(testSubject, jumpFocus, goalArea, sprint, MovementUtils.ticksToLand(heightDiff))) {
+                break;
+            } else if (!startArea.intersects(prevTestSubject.getBoundingBox())) {
+                // We only want to check jumps from the startArea
+                return Integer.MAX_VALUE;
+            } else {
+                testSubject = prevTestSubject.clone();
+            }
+        }
+        applyInputs(testSubject, node);
 
         return cost;
     }
 
     private void applyInputs(MovementDummy testSubject, Node node) {
-        node.distTravel = 0.0;
+        node.distTravel = 0;
         Vec3d prevPos = node.player.getPos();
-        int diff = testSubject.getInputs().size() - node.player.getInputs().size();
-        for (int i = testSubject.getInputs().size() - diff; i < testSubject.getInputs().size(); i++) {
+        int amountOfNewInputs = testSubject.getInputs().size() - node.player.getInputs().size();
+        for (int i = testSubject.getInputs().size() - amountOfNewInputs; i < testSubject.getInputs().size(); i++) {
             node.player.applyInput(testSubject.getInputs().get(i));
             node.distTravel += Math.sqrt(prevPos.squaredDistanceTo(node.player.getPos()));
             prevPos = node.player.getPos();

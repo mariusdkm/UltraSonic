@@ -32,8 +32,9 @@ public class Pathing extends BaseLibrary {
      */
     public static boolean immuneToDamage = false;
     public static Draw3D pathBlocks;
-    public AStar star;
-    public Node node;
+
+    private AStar star;
+    private Node endNode;
 
     public static List<Node> getPath(Node currentNode) {
         List<Node> path = new ArrayList<>();
@@ -44,11 +45,11 @@ public class Pathing extends BaseLibrary {
         return path;
     }
 
-    public boolean isImmundeToDamage() {
+    public boolean isImmuneToDamage() {
         return Pathing.immuneToDamage;
     }
 
-    public void setImmundeToDamage(boolean immuneToDamage) {
+    public void setImmuneToDamage(boolean immuneToDamage) {
         Pathing.immuneToDamage = immuneToDamage;
     }
 
@@ -65,24 +66,24 @@ public class Pathing extends BaseLibrary {
         star.startAsync();
         star.awaitTerminated();
 
-        if (star.result.isPresent()) {
-            node = star.result.get();
+        if (star.getResult().isPresent()) {
+            endNode = star.getResult().get();
             // Just sneak for 2 ticks at the end, so that we don't fall down
-            float yaw = (float) (MathUtils.calcAngleDegXZ(new Vec3d(star.goal.getX() - node.player.getX(), 0, star.goal.getZ() - node.player.getZ())));
-            node.player.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, true));
-            yaw = (float) (MathUtils.calcAngleDegXZ(new Vec3d(star.goal.getX() - node.player.getX(), 0, star.goal.getZ() - node.player.getZ())));
-            node.player.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, true, false));
+            float yaw = (float) (MathUtils.calcAngleDegXZ(new Vec3d(star.getGoal().getX() - endNode.player.getX(), 0, star.getGoal().getZ() - endNode.player.getZ())));
+            endNode.player.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, true));
+            yaw = (float) (MathUtils.calcAngleDegXZ(new Vec3d(star.getGoal().getX() - endNode.player.getX(), 0, star.getGoal().getZ() - endNode.player.getZ())));
+            endNode.player.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, true, false));
             return true;
         }
         return false;
     }
 
     public List<PlayerInput> getInputs() {
-        return node.player.getInputs();
+        return endNode.player.getInputs();
     }
 
     public void visualizePath() {
-        List<Node> path = getPath(this.node);
+        List<Node> path = getPath(this.endNode);
         if (FHud.renders.contains(pathBlocks)) {
             synchronized (FHud.renders) {
                 FHud.renders.remove(pathBlocks);
@@ -93,7 +94,7 @@ public class Pathing extends BaseLibrary {
             FHud.renders.add(pathBlocks);
         }
         for (Node node : path) {
-            pathBlocks.addPoint(new PositionCommon.Pos3D(node.pos.getX() + 0.5D, node.pos.getY() + 0.5D, node.pos.getZ() + 0.5D), 0.5, 0xde070a);
+            pathBlocks.addPoint(new PositionCommon.Pos3D(node.pos.getX() + 0.5, node.pos.getY() + 0.5, node.pos.getZ() + 0.5), 0.5, 0xde070a);
         }
 
         // int redValue = (int) (newNode.score > maxScore / 2 ? 1 - 2 * (newNode.score - maxScore / 2) / maxScore : 1.0) * 255;
