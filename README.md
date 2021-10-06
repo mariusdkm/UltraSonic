@@ -85,6 +85,10 @@ If you expierence any issues or have a question or a feature request, please ope
 
 Contributions are also very welcome, feel free to open a [pull request](https://github.com/mariusdkm/UltraSonic/pulls).
 
+### Dev Environment
+
+If you want to use a real minecraft account to test something on a server, you can use [DevAuth by DJtheRedstoner](https://github.com/DJtheRedstoner/DevAuth).
+
 ## FAQ
 
 ### Does it work yet?
