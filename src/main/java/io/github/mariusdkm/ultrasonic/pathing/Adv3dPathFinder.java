@@ -95,14 +95,14 @@ public class Adv3dPathFinder extends BasePathFinder {
             Box goalArea = createArea(newNode.player.world, newNode.pos);
             double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
             // -2.0695 is the maximum height a player can jump down, while -3.3462 is the max walking down
-            if (Pathing.isImmuneToDamage() || heightDiff > -2.0695) {
+            if (Pathing.immuneToDamage || heightDiff > -2.0695) {
                 double reach = MovementUtils.findSprintJumpReach(heightDiff);
                 Vec3d optimalJumpReach = createFocus(newNode.player.world, newNode.pos.subtract(currentNode.pos), currentNode.pos,
                         0.8 + reach,
                         1.13 + reach,
                         1).add(currentNode.pos.getX() + 0.5, goalArea.getMax(Direction.Axis.Y), currentNode.pos.getZ() + 0.5);
-                // 1.2522 Magic value?
-                if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= 1.2522
+                double jumpHeight = 1.2522;
+                if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= jumpHeight
                         && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
                     newNode.score = calcScore(newNode, currentNode.pos, startArea, goalArea, sprint);
                     newNode.prevNode = currentNode;
@@ -227,9 +227,8 @@ public class Adv3dPathFinder extends BasePathFinder {
     private void applyInputs(MovementDummy testSubject, Node node) {
         node.distTravel = 0;
         Vec3d prevPos = node.player.getPos();
-        // What diff?
-        int diff = testSubject.getInputs().size() - node.player.getInputs().size();
-        for (int i = testSubject.getInputs().size() - diff; i < testSubject.getInputs().size(); i++) {
+        int amountOfNewInputs = testSubject.getInputs().size() - node.player.getInputs().size();
+        for (int i = testSubject.getInputs().size() - amountOfNewInputs; i < testSubject.getInputs().size(); i++) {
             node.player.applyInput(testSubject.getInputs().get(i));
             node.distTravel += Math.sqrt(prevPos.squaredDistanceTo(node.player.getPos()));
             prevPos = node.player.getPos();

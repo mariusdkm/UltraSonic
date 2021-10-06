@@ -30,7 +30,7 @@ public class Pathing extends BaseLibrary {
      * Whether the player is immune to all kinds of damage
      * and thus can take fall damage and path through berry bushes etc.
      */
-    private static boolean immuneToDamage = false;
+    public static boolean immuneToDamage = false;
     public static Draw3D pathBlocks;
 
     private AStar star;
@@ -45,11 +45,11 @@ public class Pathing extends BaseLibrary {
         return path;
     }
 
-    public static boolean isImmuneToDamage() {
+    public boolean isImmuneToDamage() {
         return Pathing.immuneToDamage;
     }
 
-    public static void setImmuneToDamage(boolean immuneToDamage) {
+    public void setImmuneToDamage(boolean immuneToDamage) {
         Pathing.immuneToDamage = immuneToDamage;
     }
 

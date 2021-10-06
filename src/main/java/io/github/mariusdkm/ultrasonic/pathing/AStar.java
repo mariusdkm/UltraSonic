@@ -95,8 +95,8 @@ public class AStar extends AbstractExecutionThreadService {
             }
             for (Node node : getPath(currentNode)) {
                 if (node.prevNode != null) {
-                    scoreBlocks.addLine(node.pos.getX() + 0.5D, node.pos.getY() + 1, node.pos.getZ() + 0.5D,
-                            node.prevNode.pos.getX() + 0.5D, node.prevNode.pos.getY() + 1D, node.prevNode.pos.getZ() + 0.5D, 0xde070a);
+                    scoreBlocks.addLine(node.pos.getX() + 0.5, node.pos.getY() + 1, node.pos.getZ() + 0.5,
+                            node.prevNode.pos.getX() + 0.5, node.prevNode.pos.getY() + 1, node.prevNode.pos.getZ() + 0.5, 0xde070a);
                 }
             }
 

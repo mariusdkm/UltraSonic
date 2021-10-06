@@ -24,7 +24,9 @@ public class MixinClientConnection {
             cancellable = true
     )
     private static void onPacketReceive(Packet<?> packet, PacketListener listener, CallbackInfo info) {
-        assert MinecraftClient.getInstance().player != null;
+        if(MinecraftClient.getInstance().player == null) {
+            return;
+        }
         World world = MinecraftClient.getInstance().player.world;
 
         if (packet instanceof BlockUpdateS2CPacket blockUpdateS2CPacket) {

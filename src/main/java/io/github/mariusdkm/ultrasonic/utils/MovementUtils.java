@@ -268,13 +268,13 @@ public class MovementUtils {
 //        }
         for (int i = 0; i < 3; i++) {
             // TODO: Better name
-            RaycastContext firstCast = new RaycastContext(start[i], reverse ? end[2 - i] : end[i], RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
-            if (entity.world.raycast(firstCast).getType() != HitResult.Type.MISS) {
+            RaycastContext feetCast = new RaycastContext(start[i], reverse ? end[2 - i] : end[i], RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
+            if (entity.world.raycast(feetCast).getType() != HitResult.Type.MISS) {
                 return false;
             }
-            RaycastContext secondCast = new RaycastContext(start[i].add(0, height, 0), reverse ? end[2 - i].add(0, height, 0) : end[i].add(0, height, 0),
+            RaycastContext headCast = new RaycastContext(start[i].add(0, height, 0), reverse ? end[2 - i].add(0, height, 0) : end[i].add(0, height, 0),
                     RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
-            if (entity.world.raycast(secondCast).getType() != HitResult.Type.MISS) {
+            if (entity.world.raycast(headCast).getType() != HitResult.Type.MISS) {
                 return false;
             }
         }
