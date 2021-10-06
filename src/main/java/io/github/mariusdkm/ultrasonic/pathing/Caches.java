@@ -22,6 +22,7 @@ public class Caches {
             CampfireBlock.class,
             SweetBerryBushBlock.class
     );
+
     public static final LoadingCache<BlockPos, Boolean> WALKABLE = CacheBuilder.newBuilder()
             .maximumSize(1024)
             .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -36,9 +37,9 @@ public class Caches {
             );
 
     public static boolean isWalkable(World world, BlockPos pos) {
-        return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos), Pathing.immuneToDamage) &&
-                world.getBlockState(pos.up()).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos.up()), Pathing.immuneToDamage) &&
-                world.getBlockState(pos.up(2)).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos.up(2)), Pathing.immuneToDamage);
+        return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos), Pathing.isImmuneToDamage()) &&
+                world.getBlockState(pos.up()).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos.up()), Pathing.isImmuneToDamage()) &&
+                world.getBlockState(pos.up(2)).getCollisionShape(world, pos).isEmpty() && isSafe(world.getBlockState(pos.up(2)), Pathing.isImmuneToDamage());
     }
 
     public static boolean isSafe(BlockState state, boolean allowDamage) {

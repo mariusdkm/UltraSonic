@@ -78,7 +78,7 @@ public class MovementUtils {
      * @param player The player to use
      * @return inertia of the specified block
      */
-    static float getGroundInertia(MovementDummy player) {
+    public static double getGroundInertia(MovementDummy player) {
         return getGroundInertia(player.world, player.getPos());
     }
 
@@ -89,11 +89,11 @@ public class MovementUtils {
      * @param pos   the position to get the inertia from
      * @return inertia of the specified block
      */
-    static float getGroundInertia(World world, Vec3d pos) {
+    public static double getGroundInertia(World world, Vec3d pos) {
         // or BlockStateInterface.getBlock(ctx, dest).slipperiness?
         // BlockPos blockPos = this.getVelocityAffectingPos();
         // float t = player.world.getBlockState(blockPos).getBlock().getSlipperiness();
-        return world.getBlockState(new BlockPos(MathHelper.fastFloor(pos.x), MathHelper.fastFloor(pos.y) - 1.0D, MathHelper.fastFloor(pos.z))).getBlock().getSlipperiness() * 0.91F;
+        return world.getBlockState(new BlockPos(MathHelper.fastFloor(pos.x), MathHelper.fastFloor(pos.y) - 1, MathHelper.fastFloor(pos.z))).getBlock().getSlipperiness() * 0.91;
     }
 
     /**
@@ -117,10 +117,9 @@ public class MovementUtils {
      * @return How far relative the player is going to move.
      * @see net.minecraft.client.network.ClientPlayerEntity#travel(Vec3d)
      */
-    static double jumpReach(MovementDummy player, int ticks, Direction.Axis axis, boolean sprint) {
-
+    public static double jumpReach(MovementDummy player, int ticks, Direction.Axis axis, boolean sprint) {
         double reach = 0.0;
-        float yaw = player.getYaw(); //Should this become it's own variable?
+        double yaw = player.getYaw(); //Should this become its own variable?
 
         // We first have to add the one tick of ground movement.
         double motion = groundTick(player, sprint, true).getComponentAlongAxis(axis);
@@ -128,9 +127,9 @@ public class MovementUtils {
         // We still have ground, bc our Positions hasn't changed yet
         motion *= getGroundInertia(player);
 
-        float trig = (axis.getName().equals("z")) ? MathHelper.cos(yaw * 0.017453292F) : -MathHelper.sin(yaw * 0.017453292F); // 0.017453292F = Math.PI / 180.0F
+        double trig = (axis.getName().equals("z")) ? Math.cos(yaw * 0.017453292) : -Math.sin(yaw * 0.017453292); // 0.017453292F = Math.PI / 180.0F
 
-        trig *= ((sprint) ? 0.02548F : 0.0196F); // 0.02548 =  0.98 * (0.02 + 0.02 * 0.3); 0.0196 = 0.98 * 0.02
+        trig *= ((sprint) ? 0.02548 : 0.0196); // 0.02548 =  0.98 * (0.02 + 0.02 * 0.3); 0.0196 = 0.98 * 0.02
 
         //We start counting at the second tick, since we already calculated the 1.
         for (int tick = 1; tick < ticks; tick++) {
@@ -159,20 +158,20 @@ public class MovementUtils {
      * @see MovementUtils#jumpReach(MovementDummy, int, Direction.Axis, boolean)
      * @see net.minecraft.entity.player.PlayerEntity#travel(Vec3d)
      */
-    static double fwdGroundTick(double motion, float inertia, float yaw, Direction.Axis axis, boolean sprint, boolean jump) {
-        float movementFactor = (0.16277136F / inertia / inertia / inertia);
-        float trig = (axis.getName().equals("z")) ? MathHelper.cos(yaw * 0.017453292F) : -MathHelper.sin(yaw * 0.017453292F);
+    public static double fwdGroundTick(double motion, double inertia, double yaw, Direction.Axis axis, boolean sprint, boolean jump) {
+        double movementFactor = (0.16277136 / inertia / inertia / inertia);
+        double trig = (axis.getName().equals("z")) ? Math.cos(yaw * 0.017453292) : -Math.sin(yaw * 0.017453292);
         motion += movementFactor * trig * (sprint ? 0.12739 : 0.098) + ((sprint && jump) ? trig * 0.2 : 0); // 0.1274 =  0.98 * 0.13; 0.098 = 0.98 * 0.1
         return motion;
     }
-//    static double fwdGroundTick(double motion, float inertia, float yaw, char dir, boolean sprint, boolean jump) {
+//    public static double fwdGroundTick(double motion, float inertia, float yaw, char dir, boolean sprint, boolean jump) {
 //        float momentum = motion * inertia * 0.91 + (sprint ? 0.12739 : 0.098) ;
 //        float trig = (dir == 'Z') ? MathHelper.cos(yaw * 0.017453292F) : -MathHelper.sin(yaw * 0.017453292F);
 //        motion += movementFactor * trig * (sprint ? 0.12739 : 0.098) + ((sprint && jump) ? trig * 0.2 : 0); // 0.1274 =  0.98 * 0.13; 0.098 = 0.98 * 0.1
 //        return motion;
 //    }
 
-    public static Box jumpDistance(MovementDummy player, int ticks, float yaw, boolean sprinting) {
+    public static Box jumpDistance(MovementDummy player, int ticks, double yaw, boolean sprinting) {
         MovementDummy testSubject = player.clone();
         testSubject.applyInput(new PlayerInput(1, 0, yaw, 0, true, false, sprinting));
         for (int i = 0; i < ticks - 2; i++) {
@@ -197,7 +196,7 @@ public class MovementUtils {
      * @see MovementUtils#jumpReach(MovementDummy, int, Direction.Axis, boolean)
      * @see net.minecraft.entity.player.PlayerEntity#travel(Vec3d)
      */
-    static Vec3d groundTick(MovementDummy player, boolean sprint, boolean jump) {
+    public static Vec3d groundTick(MovementDummy player, boolean sprint, boolean jump) {
         Vec3d newPos = new Vec3d(0.0, 0.0, 0.0);
         newPos.add(fwdGroundTick(player.getVelocity().x, getGroundInertia(player), player.getYaw(), Direction.Axis.X, sprint, jump), 0.0, 0.0);
         newPos.add(0.0, 0.0, fwdGroundTick(player.getVelocity().z, getGroundInertia(player), player.getYaw(), Direction.Axis.Z, sprint, jump));
@@ -219,7 +218,7 @@ public class MovementUtils {
         // 0.6 = entity.getDimensions(EntityPose.STANDING).width
         Vec3d[][] startCorners = getRaycastCorners(entity.world, startBlock, 0.6);
         Vec3d[][] endCorners = getRaycastCorners(entity.world, endBlock, 0.6);
-        // When the block is so small, that the only rays are from it's corners
+        // When the block is so small, that the only rays are from its corners
         boolean smallBlock = startCorners.length == 6 || endCorners.length == 6;
         for (int i = 0; i < 4; i++) {
             if (raycastHitboxFace(entity, startCorners[i], endCorners[i], false)) {
@@ -256,45 +255,10 @@ public class MovementUtils {
         return false;
     }
 
-    private static Vec3d[][] getRaycastCorners(World world, BlockPos pos, double width) {
-        double halfWidth = width / 2;
-        // This is kinda special, since we want the hitbox not to reach over the corners
-        VoxelShape shape = world.getBlockState(pos).getCollisionShape(world, pos);
-        double maxX = shape.getMax(Direction.Axis.X) + pos.getX();
-        double maxY = shape.getMax(Direction.Axis.Y) + pos.getY();
-        double maxZ = shape.getMax(Direction.Axis.Z) + pos.getZ();
-        double minX = shape.getMin(Direction.Axis.X) + pos.getX();
-        double minZ = shape.getMin(Direction.Axis.Z) + pos.getZ();
-        if (maxX - minX <= width && maxZ - minZ <= width) {
-            // The block is so small, we just return the middle
-            double centerX = shape.getMin(Direction.Axis.X) + shape.getMax(Direction.Axis.X) / 2 + pos.getX();
-            double centerY = shape.getMin(Direction.Axis.Y) + shape.getMax(Direction.Axis.Y) / 2 + pos.getZ();
-            return new Vec3d[][]{
-                    {new Vec3d(centerX - halfWidth, maxY, centerY - halfWidth), new Vec3d(centerX, maxY, centerY - halfWidth), new Vec3d(centerX + halfWidth, maxY, centerY - halfWidth)},
-                    {new Vec3d(centerX - halfWidth, maxY, centerY + halfWidth), new Vec3d(centerX, maxY, centerY + halfWidth), new Vec3d(centerX + halfWidth, maxY, centerY + halfWidth)},
-                    {}, {},
-                    {new Vec3d(centerX - halfWidth, maxY, centerY - halfWidth), new Vec3d(centerX - halfWidth, maxY, centerY), new Vec3d(centerX - halfWidth, maxY, centerY + halfWidth)},
-                    {new Vec3d(centerX + halfWidth, maxY, centerY - halfWidth), new Vec3d(centerX + halfWidth, maxY, centerY), new Vec3d(centerX + halfWidth, maxY, centerY + halfWidth)}
-            };
-        } else {
-            // The order here is very important
-            // This is just pain, pls help
-            return new Vec3d[][]{
-                    {new Vec3d(minX, maxY, minZ), new Vec3d(minX + halfWidth, maxY, minZ), new Vec3d(minX + width, maxY, minZ)},
-                    {new Vec3d(maxX - width, maxY, minZ), new Vec3d(maxX - halfWidth, maxY, minZ), new Vec3d(maxX, maxY, minZ)},
-                    {new Vec3d(minX, maxY, maxZ), new Vec3d(minX + halfWidth, maxY, maxZ), new Vec3d(minX + width, maxY, maxZ)},
-                    {new Vec3d(maxX - width, maxY, maxZ), new Vec3d(maxX - halfWidth, maxY, maxZ), new Vec3d(maxX, maxY, maxZ)},
-                    {new Vec3d(minX, maxY, minZ), new Vec3d(minX, maxY, minZ + halfWidth), new Vec3d(minX, maxY, minZ + width)},
-                    {new Vec3d(minX, maxY, maxZ - width), new Vec3d(minX, maxY, maxZ - halfWidth), new Vec3d(minX, maxY, maxZ)},
-                    {new Vec3d(maxX, maxY, minZ), new Vec3d(maxX, maxY, minZ + halfWidth), new Vec3d(maxX, maxY, minZ + width)},
-                    {new Vec3d(maxX, maxY, maxZ - width), new Vec3d(maxX, maxY, maxZ - halfWidth), new Vec3d(maxX, maxY, maxZ)},
-            };
-        }
-    }
-
     public static boolean raycastHitboxFace(Entity entity, Vec3d[] start, Vec3d[] end, boolean reverse) {
         double height = 1.8;
-        if (MathUtils.angleToVec(start[0], end[0]) == MathUtils.angleToVec(start[0], start[2]) || MathUtils.angleToVec(start[0], end[0]) == MathUtils.angleToVec(start[2], start[0])) {
+        if (Math.abs(MathUtils.angleToVec(start[0], end[0]) - MathUtils.angleToVec(start[0], start[2])) < Double.MIN_VALUE * 2
+                || Math.abs(MathUtils.angleToVec(start[0], end[0]) - MathUtils.angleToVec(start[2], start[0])) < Double.MIN_VALUE * 2) {
             // This would mean, that we just check in one line, but we instead want to raycast the hitbox face of the player
             return false;
         }
@@ -303,10 +267,14 @@ public class MovementUtils {
 //            Pathing.pathBlocks.addLine(start[i].x, start[i].y, start[i].z, (reverse ? end[2 - i] : end[i]).x, (reverse ? end[2 - i] : end[i]).y, (reverse ? end[2 - i] : end[i]).z, 0xfc0303);
 //        }
         for (int i = 0; i < 3; i++) {
-            if (entity.world.raycast(new RaycastContext(start[i], reverse ? end[2 - i] : end[i], RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity)).getType() != HitResult.Type.MISS) {
+            // TODO: Better name
+            RaycastContext firstCast = new RaycastContext(start[i], reverse ? end[2 - i] : end[i], RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
+            if (entity.world.raycast(firstCast).getType() != HitResult.Type.MISS) {
                 return false;
             }
-            if (entity.world.raycast(new RaycastContext(start[i].add(0, height, 0), reverse ? end[2 - i].add(0, height, 0) : end[i].add(0, height, 0), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity)).getType() != HitResult.Type.MISS) {
+            RaycastContext secondCast = new RaycastContext(start[i].add(0, height, 0), reverse ? end[2 - i].add(0, height, 0) : end[i].add(0, height, 0),
+                    RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
+            if (entity.world.raycast(secondCast).getType() != HitResult.Type.MISS) {
                 return false;
             }
         }
@@ -314,18 +282,18 @@ public class MovementUtils {
     }
 
     public static boolean simulateJump(MovementDummy testSubject, Vec3d goalFocus, Box goal, boolean allowSprint, int ticks) {
-        float yaw = (float) MathUtils.angleToVec(testSubject.getPos(), goalFocus);
-        testSubject.applyInput(new PlayerInput(1.0F, 0.0F, yaw, 0.0F, true, false, allowSprint));
+        double yaw = MathUtils.angleToVec(testSubject.getPos(), goalFocus);
+        testSubject.applyInput(new PlayerInput(1, 0, yaw, 0, true, false, allowSprint));
         MovementDummy prevTestSubject;
         // We are jumping, YEET
         for (int i = 0; i < ticks - 1; i++) {
             prevTestSubject = testSubject.clone();
 
-            yaw = (float) MathUtils.angleToVec(testSubject.getPos(), goalFocus);
-            PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, allowSprint);
+            yaw = MathUtils.angleToVec(testSubject.getPos(), goalFocus);
+            PlayerInput newInput = new PlayerInput(1, 0, yaw, 0, false, false, allowSprint);
             testSubject.applyInput(newInput);
 
-            if (testSubject.horizontalCollision && doObstacleAvoidance(testSubject, prevTestSubject, newInput, goalFocus, allowSprint) == 0.0) {
+            if (testSubject.horizontalCollision && Math.abs(doObstacleAvoidance(testSubject, prevTestSubject, newInput, goalFocus, allowSprint)) < Double.MIN_VALUE * 2) {
                 // We don't move at all, so something must be wrong
                 return false;
             } else if (testSubject.verticalCollision && goal.intersects(testSubject.getBoundingBox())) {
@@ -350,7 +318,6 @@ public class MovementUtils {
             // But do we actually travel further with the new yaw?
             if (diff > testSubject.getPos().squaredDistanceTo(prevTestSubject.getPos())) {
                 // Nope, so do the same as before
-                newInput = new PlayerInput(1.0F, 0.0F, MathUtils.angleToVec(testSubject.getPos(), jumpFocus), 0.0F, false, false, allowSprint);
                 testSubject.applyInput(newInput);
                 return diff;
             } else {
@@ -417,20 +384,58 @@ public class MovementUtils {
         }
         Vec3d[][] startCorners = getRaycastCorners(entity.world, startBlock, 0.6);
         Vec3d[][] endCorners = getRaycastCorners(entity.world, endBlock, 0.6);
-        // When the block is so small, that the only rays are from it's corners
+        // When the block is so small, that the only rays are from its corners
         boolean smallBlock = startCorners.length == 6 || endCorners.length == 6;
         for (int i = 0; i < 4; i++) {
             raycastHitboxFace(entity, startCorners[i], endCorners[i], false);
             raycastHitboxFace(entity, startCorners[i + 4], endCorners[i + 4], false);
             // Since we also raycast diagonally we don't want the rays to cross each other and instead run "parallel" to each other
-            raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], !(MathUtils.angleBetweenVec(startCorners[i][2].subtract(startCorners[i][0]), endCorners[i + 4][0].subtract(startCorners[i][0])) >
-                    MathUtils.angleBetweenVec(startCorners[i][2].subtract(startCorners[i][0]), endCorners[i + 4][2].subtract(startCorners[i][0]))));
-            raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], !(MathUtils.angleBetweenVec(startCorners[i + 4][2].subtract(startCorners[i + 4][0]), endCorners[i][0].subtract(startCorners[i + 4][0])) >
-                    MathUtils.angleBetweenVec(startCorners[i + 4][2].subtract(startCorners[i + 4][0]), endCorners[i][2].subtract(startCorners[i + 4][0]))));
+            raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], !(MathUtils.angleBetweenVec(startCorners[i][2].subtract(startCorners[i][0]),
+                    endCorners[i + 4][0].subtract(startCorners[i][0])) > MathUtils.angleBetweenVec(startCorners[i][2].subtract(startCorners[i][0]),
+                    endCorners[i + 4][2].subtract(startCorners[i][0]))));
+            raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], !(MathUtils.angleBetweenVec(startCorners[i + 4][2].subtract(startCorners[i + 4][0]),
+                    endCorners[i][0].subtract(startCorners[i + 4][0])) > MathUtils.angleBetweenVec(startCorners[i + 4][2].subtract(startCorners[i + 4][0]),
+                    endCorners[i][2].subtract(startCorners[i + 4][0]))));
             if (smallBlock && i == 1) {
                 break;
             }
         }
     }
 
+    // Warum ist hier die width als einziges ein Parameter und sonst nicht?
+    private static Vec3d[][] getRaycastCorners(World world, BlockPos pos, double width) {
+        double halfWidth = width / 2;
+        // This is kinda special, since we want the hitbox not to reach over the corners
+        VoxelShape shape = world.getBlockState(pos).getCollisionShape(world, pos);
+        double maxX = shape.getMax(Direction.Axis.X) + pos.getX();
+        double maxY = shape.getMax(Direction.Axis.Y) + pos.getY();
+        double maxZ = shape.getMax(Direction.Axis.Z) + pos.getZ();
+        double minX = shape.getMin(Direction.Axis.X) + pos.getX();
+        double minZ = shape.getMin(Direction.Axis.Z) + pos.getZ();
+        if (maxX - minX <= width && maxZ - minZ <= width) {
+            // The block is so small, we just return the middle
+            double centerX = shape.getMin(Direction.Axis.X) + shape.getMax(Direction.Axis.X) / 2 + pos.getX();
+            double centerY = shape.getMin(Direction.Axis.Y) + shape.getMax(Direction.Axis.Y) / 2 + pos.getZ();
+            return new Vec3d[][]{
+                    {new Vec3d(centerX - halfWidth, maxY, centerY - halfWidth), new Vec3d(centerX, maxY, centerY - halfWidth), new Vec3d(centerX + halfWidth, maxY, centerY - halfWidth)},
+                    {new Vec3d(centerX - halfWidth, maxY, centerY + halfWidth), new Vec3d(centerX, maxY, centerY + halfWidth), new Vec3d(centerX + halfWidth, maxY, centerY + halfWidth)},
+                    {}, {},
+                    {new Vec3d(centerX - halfWidth, maxY, centerY - halfWidth), new Vec3d(centerX - halfWidth, maxY, centerY), new Vec3d(centerX - halfWidth, maxY, centerY + halfWidth)},
+                    {new Vec3d(centerX + halfWidth, maxY, centerY - halfWidth), new Vec3d(centerX + halfWidth, maxY, centerY), new Vec3d(centerX + halfWidth, maxY, centerY + halfWidth)}
+            };
+        } else {
+            // The order here is very important
+            // This is just pain, pls help
+            return new Vec3d[][]{
+                    {new Vec3d(minX, maxY, minZ), new Vec3d(minX + halfWidth, maxY, minZ), new Vec3d(minX + width, maxY, minZ)},
+                    {new Vec3d(maxX - width, maxY, minZ), new Vec3d(maxX - halfWidth, maxY, minZ), new Vec3d(maxX, maxY, minZ)},
+                    {new Vec3d(minX, maxY, maxZ), new Vec3d(minX + halfWidth, maxY, maxZ), new Vec3d(minX + width, maxY, maxZ)},
+                    {new Vec3d(maxX - width, maxY, maxZ), new Vec3d(maxX - halfWidth, maxY, maxZ), new Vec3d(maxX, maxY, maxZ)},
+                    {new Vec3d(minX, maxY, minZ), new Vec3d(minX, maxY, minZ + halfWidth), new Vec3d(minX, maxY, minZ + width)},
+                    {new Vec3d(minX, maxY, maxZ - width), new Vec3d(minX, maxY, maxZ - halfWidth), new Vec3d(minX, maxY, maxZ)},
+                    {new Vec3d(maxX, maxY, minZ), new Vec3d(maxX, maxY, minZ + halfWidth), new Vec3d(maxX, maxY, minZ + width)},
+                    {new Vec3d(maxX, maxY, maxZ - width), new Vec3d(maxX, maxY, maxZ - halfWidth), new Vec3d(maxX, maxY, maxZ)},
+            };
+        }
+    }
 }

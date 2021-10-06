@@ -24,11 +24,11 @@ public class MixinClientConnection {
             cancellable = true
     )
     private static void onPacketReceive(Packet<?> packet, PacketListener listener, CallbackInfo info) {
-        if (MinecraftClient.getInstance().player == null) return;
+        assert MinecraftClient.getInstance().player != null;
         World world = MinecraftClient.getInstance().player.world;
 
-        if (packet instanceof BlockUpdateS2CPacket) {
-            BlockPos pos = ((BlockUpdateS2CPacket) packet).getPos();
+        if (packet instanceof BlockUpdateS2CPacket blockUpdateS2CPacket) {
+            BlockPos pos = blockUpdateS2CPacket.getPos();
 
             Caches.WALKABLE.invalidate(pos);
             try {

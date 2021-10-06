@@ -9,13 +9,13 @@ import org.apache.logging.log4j.Logger;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
 
 public class UltraSonic implements ModInitializer {
-    public static final boolean isJsMacrosPresent = FabricLoader.getInstance().isModLoaded("jsmacros");
+    private static final boolean IS_JS_MACROS_PRESENT = FabricLoader.getInstance().isModLoaded("jsmacros");
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
     public void onInitialize() {
         LOGGER.atLevel(Level.DEBUG);
-        if (isJsMacrosPresent) {
+        if (IS_JS_MACROS_PRESENT) {
             LOGGER.info("Jsmacros is present");
             JsMacros.core.libraryRegistry.addLibrary(Pathing.class);
         } else {

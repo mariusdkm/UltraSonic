@@ -9,9 +9,7 @@ import net.minecraft.world.RaycastContext;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class Simple2dPathFinder extends BasePathFinder {
@@ -21,8 +19,8 @@ public class Simple2dPathFinder extends BasePathFinder {
     }
 
     @Override
-    public List<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
-        List<CompletableFuture<Node>> queue = new ArrayList<>();
+    public Queue<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
+        Queue<CompletableFuture<Node>> queue = new ArrayDeque<>();
 //        for (int x = currentNode.pos.getX() - 1; x <= currentNode.pos.getX() + 1; x += 1) {
 //            for (int z = currentNode.pos.getZ() - 1; z <= currentNode.pos.getZ() + 1; z += 1) {
 //                if (currentNode.pos.getX() == x && currentNode.pos.getZ() == z) {

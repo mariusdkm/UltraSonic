@@ -6,6 +6,7 @@ import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 
+// Maybe turn into record
 public class Node {
     public BlockPos pos;
     public int score;
@@ -31,7 +32,7 @@ public class Node {
 
     @Override
     public int hashCode() {
-        return this.pos.toString().hashCode();
+        return this.pos.hashCode();
     }
 
     @Override
@@ -49,10 +50,5 @@ public class Node {
                 '}';
     }
 
-    static class NodeComparator implements Comparator<Node> {
-        @Override
-        public int compare(Node o1, Node o2) {
-            return o1.score - o2.score;
-        }
-    }
+    static final Comparator<Node> nodeComparator = (n1, n2) ->  Integer.compare(n1.score, n2.score);
 }
