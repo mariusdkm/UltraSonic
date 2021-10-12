@@ -3,6 +3,8 @@ package io.github.mariusdkm.ultrasonic.pathing;
 import io.github.mariusdkm.ultrasonic.api.Pathing;
 import io.github.mariusdkm.ultrasonic.utils.MathUtils;
 import io.github.mariusdkm.ultrasonic.utils.MovementUtils;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;

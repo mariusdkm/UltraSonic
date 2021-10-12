@@ -27,8 +27,6 @@ public class MixinClientConnection {
         if(MinecraftClient.getInstance().player == null) {
             return;
         }
-        World world = MinecraftClient.getInstance().player.world;
-
         if (packet instanceof BlockUpdateS2CPacket blockUpdateS2CPacket) {
             BlockPos pos = blockUpdateS2CPacket.getPos();
 
