@@ -15,7 +15,9 @@ import xyz.wagyourtail.jsmacros.client.access.IChatHud;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static io.github.mariusdkm.ultrasonic.utils.MovementUtils.*;
@@ -219,13 +221,10 @@ public class Adv3dPathFinder extends BasePathFinder {
                 testSubject = prevTestSubject.clone();
             }
         }
-        applyInputs(testSubject, node);
-
-        return cost;
+        return applyInputs(testSubject, node);
     }
 
-    private void applyInputs(MovementDummy testSubject, Node node) {
-        node.distTravel = 0;
+    private int applyInputs(MovementDummy testSubject, Node node) {
         Vec3d prevPos = node.player.getPos();
         int amountOfNewInputs = testSubject.getInputs().size() - node.player.getInputs().size();
         for (int i = testSubject.getInputs().size() - amountOfNewInputs; i < testSubject.getInputs().size(); i++) {
@@ -233,5 +232,6 @@ public class Adv3dPathFinder extends BasePathFinder {
             node.distTravel += Math.sqrt(prevPos.squaredDistanceTo(node.player.getPos()));
             prevPos = node.player.getPos();
         }
+        return amountOfNewInputs;
     }
 }

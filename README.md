@@ -44,8 +44,10 @@ It can be used in any language just like for example the `Player` object.
 
 1st script; pathfind to the block targeted by the crosshair
 ```js
+// Whether to draw the yellow points that show where the player will move
 Player.setDrawPredictions(true);
-
+// Whether the player doesn't take damage(like in creative)
+Player.setImmuneToDamage(false);
 // Set goal here
 const goal = Player.rayTraceBlock(20, false).getBlockPos(); 
 Chat.log("Goal: " + goal);
