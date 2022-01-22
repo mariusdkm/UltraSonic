@@ -1,6 +1,8 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
@@ -109,26 +111,36 @@ public class AStar extends AbstractExecutionThreadService {
             int currentScore = currentNode.score;
 
             Queue<CompletableFuture<Node>> newNodes = adv3dPathFinder.calcNode(currentNode, currentScore, closedSet);
+            Stack<CompletableFuture<Node>> stack = new Stack<>();
+            while (!newNodes.isEmpty()) {
+                stack.push(newNodes.poll());
+            }
+            while (!stack.isEmpty()) {
+                newNodes.add(stack.pop());
+            }
             // Check if the nodes already exist in the queue, and removing duplicates that are worse
             // Without this, the queue would get very big
             Node[] queueArray = queue.toArray(new Node[0]);
-            newNodes.stream().parallel().map(CompletableFuture::join).forEach(newNode -> {
-                if (newNode == null) {
-                    return;
-                }
-                for (Node oldNode : queueArray) {
-                    // Check if node already exists in the queue
-                    if (oldNode.equals(newNode)) {
-                        if (oldNode.score > newNode.score) {
-                            queue.remove(oldNode);
-                            queue.add(newNode);
-                        } else {
+            CompletableFuture.allOf(stack.toArray(new CompletableFuture<?>[0]))
+                .thenAccept(unused -> {
+                    newNodes.stream().map(CompletableFuture::join).forEach(newNode -> {
+                        if (newNode == null) {
                             return;
                         }
-                    }
-                }
-                queue.add(newNode);
-            });
+                        for (Node oldNode : queueArray) {
+                            // Check if node already exists in the queue
+                            if (oldNode.equals(newNode)) {
+                                if (oldNode.score > newNode.score) {
+                                    queue.remove(oldNode);
+                                    queue.add(newNode);
+                                } else {
+                                    return;
+                                }
+                            }
+                        }
+                        queue.add(newNode);
+                    });
+                });
         }
         synchronized (FHud.renders) {
             FHud.renders.remove(scoreBlocks);

@@ -127,7 +127,7 @@ public class MovementUtils {
         // We still have ground, bc our Positions hasn't changed yet
         motion *= getGroundInertia(player);
 
-        double trig = (axis.getName().equals("z")) ? Math.cos(yaw * 0.017453292) : -Math.sin(yaw * 0.017453292); // 0.017453292F = Math.PI / 180.0F
+        double trig = (axis.getName().equals("z")) ? MathUtils.f_cos(yaw * 0.017453292) : -MathUtils.f_sin(yaw * 0.017453292); // 0.017453292F = Math.PI / 180.0F
 
         trig *= ((sprint) ? 0.02548 : 0.0196); // 0.02548 =  0.98 * (0.02 + 0.02 * 0.3); 0.0196 = 0.98 * 0.02
 
@@ -160,7 +160,7 @@ public class MovementUtils {
      */
     public static double fwdGroundTick(double motion, double inertia, double yaw, Direction.Axis axis, boolean sprint, boolean jump) {
         double movementFactor = (0.16277136 / inertia / inertia / inertia);
-        double trig = (axis.getName().equals("z")) ? Math.cos(yaw * 0.017453292) : -Math.sin(yaw * 0.017453292);
+        double trig = (axis.getName().equals("z")) ? MathUtils.f_cos(yaw * 0.017453292) : -MathUtils.f_sin(yaw * 0.017453292);
         motion += movementFactor * trig * (sprint ? 0.12739 : 0.098) + ((sprint && jump) ? trig * 0.2 : 0); // 0.1274 =  0.98 * 0.13; 0.098 = 0.98 * 0.1
         return motion;
     }
