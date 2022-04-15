@@ -84,7 +84,7 @@ public class Pathing extends BaseLibrary {
 
     public void visualizePath() {
         List<Node> path = getPath(this.endNode);
-        if (FHud.renders.contains(pathBlocks)) {
+        if (pathBlocks != null && FHud.renders.contains(pathBlocks)) {
             synchronized (FHud.renders) {
                 FHud.renders.remove(pathBlocks);
             }

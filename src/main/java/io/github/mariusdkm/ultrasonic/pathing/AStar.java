@@ -7,7 +7,10 @@ import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
 import xyz.wagyourtail.jsmacros.client.api.library.impl.FHud;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.PriorityBlockingQueue;
 

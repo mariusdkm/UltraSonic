@@ -9,7 +9,9 @@ import net.minecraft.world.RaycastContext;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class Simple2dPathFinder extends BasePathFinder {

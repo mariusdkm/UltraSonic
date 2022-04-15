@@ -1,10 +1,10 @@
 plugins {
-    id 'fabric-loom' version '0.9-SNAPSHOT'
+    id 'fabric-loom' version '0.11-SNAPSHOT'
     id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -38,7 +38,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-command-api-v1:${project.command_api_version}"
 
     // JsMacros
-    modImplementation("com.github.wagyourtail:JSMacros:${project.jsmacros_version}") {
+    modImplementation("com.github.wagyourtail.JsMacros:jsmacros-${project.minecraft_version}-fabric:${project.jsmacros_version}") {
         transitive = false
     }
 
@@ -71,7 +71,7 @@ tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
 
     // Minecraft 1.17 (21w19a) upwards uses Java 16.
-    it.options.release = 16
+    it.options.release = 17
 }
 
 java {
@@ -87,25 +87,20 @@ jar {
     }
 }
 
+
 // configure the maven publication
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
-        }
-    }
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
 
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
-    }
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
 }

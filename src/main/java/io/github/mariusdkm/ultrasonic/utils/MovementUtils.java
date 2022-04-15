@@ -216,69 +216,46 @@ public class MovementUtils {
      */
     public static boolean isDirectPath(LivingEntity entity, BlockPos startBlock, BlockPos endBlock) {
         // 0.6 = entity.getDimensions(EntityPose.STANDING).width
-        Vec3d[][] startCorners = getRaycastCorners(entity.world, startBlock, 0.6);
-        Vec3d[][] endCorners = getRaycastCorners(entity.world, endBlock, 0.6);
-        // When the block is so small, that the only rays are from its corners
-        boolean smallBlock = startCorners.length == 6 || endCorners.length == 6;
-        for (int i = 0; i < 4; i++) {
-            if (raycastHitboxFace(entity, startCorners[i], endCorners[i], false)) {
-                return true;
-            }
-            if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i + 4], false)) {
-                return true;
-            }
-            // Since we also raycast diagonally we don't want the rays to cross each other and instead run "parallel" to each other
-            if (MathUtils.angleBetweenVec(startCorners[i][2].subtract(startCorners[i][0]), endCorners[i + 4][0].subtract(startCorners[i][0])) >
-                    MathUtils.angleBetweenVec(startCorners[i][2].subtract(startCorners[i][0]), endCorners[i + 4][2].subtract(startCorners[i][0]))) {
-                if (raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], false)) {
-                    return true;
-                }
-            } else {
-                if (raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], true)) {
-                    return true;
-                }
-            }
-            if (MathUtils.angleBetweenVec(startCorners[i + 4][2].subtract(startCorners[i + 4][0]), endCorners[i][0].subtract(startCorners[i + 4][0])) >
-                    MathUtils.angleBetweenVec(startCorners[i + 4][2].subtract(startCorners[i + 4][0]), endCorners[i][2].subtract(startCorners[i + 4][0]))) {
-                if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], false)) {
-                    return true;
-                }
-            } else {
-                if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], true)) {
-                    return true;
-                }
-            }
-            if (smallBlock && i == 1) {
-                break;
-            }
-        }
-        return false;
-    }
+        BlockPos blockToNode = endBlock.subtract(startBlock);
+        Vec3d[] startCorners = getRaycastSpots(entity.world, startBlock, blockToNode);
+        Vec3d[] endCorners = getRaycastSpots(entity.world, endBlock, blockToNode);
 
-    public static boolean raycastHitboxFace(Entity entity, Vec3d[] start, Vec3d[] end, boolean reverse) {
-        double height = 1.8;
-        if (Math.abs(MathUtils.angleToVec(start[0], end[0]) - MathUtils.angleToVec(start[0], start[2])) < Double.MIN_VALUE * 2
-                || Math.abs(MathUtils.angleToVec(start[0], end[0]) - MathUtils.angleToVec(start[2], start[0])) < Double.MIN_VALUE * 2) {
-            // This would mean, that we just check in one line, but we instead want to raycast the hitbox face of the player
-            return false;
-        }
-        // Code for debugging
-//        for (int i = 0; i < 3; i++) {
-//            Pathing.pathBlocks.addLine(start[i].x, start[i].y, start[i].z, (reverse ? end[2 - i] : end[i]).x, (reverse ? end[2 - i] : end[i]).y, (reverse ? end[2 - i] : end[i]).z, 0xfc0303);
-//        }
-        for (int i = 0; i < 3; i++) {
-            // TODO: Better name
-            RaycastContext feetCast = new RaycastContext(start[i], reverse ? end[2 - i] : end[i], RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
-            if (entity.world.raycast(feetCast).getType() != HitResult.Type.MISS) {
-                return false;
-            }
-            RaycastContext headCast = new RaycastContext(start[i].add(0, height, 0), reverse ? end[2 - i].add(0, height, 0) : end[i].add(0, height, 0),
-                    RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
-            if (entity.world.raycast(headCast).getType() != HitResult.Type.MISS) {
-                return false;
-            }
-        }
         return true;
+        // When the block is so small, that the only rays are from its corners
+//        boolean smallBlock = startCorners.length == 6 || endCorners.length == 6;
+//        for (int i = 0; i < 4; i++) {
+//            if (raycastHitboxFace(entity, startCorners[i], endCorners[i], false)) {
+//                return true;
+//            }
+//            if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i + 4], false)) {
+//                return true;
+//            }
+//            // Since we also raycast diagonally we don't want the rays to cross each other and instead run "parallel" to each other
+//            if (MathUtils.angleBetweenVec(startCorners[i][2].subtract(startCorners[i][0]), endCorners[i + 4][0].subtract(startCorners[i][0])) >
+//                    MathUtils.angleBetweenVec(startCorners[i][2].subtract(startCorners[i][0]), endCorners[i + 4][2].subtract(startCorners[i][0]))) {
+//                if (raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], false)) {
+//                    return true;
+//                }
+//            } else {
+//                if (raycastHitboxFace(entity, startCorners[i], endCorners[i + 4], true)) {
+//                    return true;
+//                }
+//            }
+//            if (MathUtils.angleBetweenVec(startCorners[i + 4][2].subtract(startCorners[i + 4][0]), endCorners[i][0].subtract(startCorners[i + 4][0])) >
+//                    MathUtils.angleBetweenVec(startCorners[i + 4][2].subtract(startCorners[i + 4][0]), endCorners[i][2].subtract(startCorners[i + 4][0]))) {
+//                if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], false)) {
+//                    return true;
+//                }
+//            } else {
+//                if (raycastHitboxFace(entity, startCorners[i + 4], endCorners[i], true)) {
+//                    return true;
+//                }
+//            }
+//            if (smallBlock && i == 1) {
+//                break;
+//            }
+//        }
+//        return false;
     }
 
     public static boolean simulateJump(MovementDummy testSubject, Vec3d goalFocus, Box goal, boolean allowSprint, int ticks) {
@@ -400,6 +377,107 @@ public class MovementUtils {
                 break;
             }
         }
+    }
+
+
+    private static Vec3d[] getRaycastSpots(World world, BlockPos pos, BlockPos blockToNode) {
+        // This is kinda special, since we want the hitbox not to reach over the corners
+        VoxelShape shape = world.getBlockState(pos).getCollisionShape(world, pos);
+        double maxX = shape.getMax(Direction.Axis.X);
+        double maxY = shape.getMax(Direction.Axis.Y);
+        double maxZ = shape.getMax(Direction.Axis.Z);
+        double minX = shape.getMin(Direction.Axis.X);
+        double minZ = shape.getMin(Direction.Axis.Z);
+        double halfLenX = (maxX - minX) / 2.0;
+        double halfLenZ = (maxZ - minZ) / 2.0;
+        double centerX = halfLenX + pos.getX();
+        double centerZ = halfLenZ + pos.getZ();
+
+        Vec3d dirVec;
+        if (blockToNode.getX() == 0 || blockToNode.getZ() == 0) {
+            /*
+            At the + we want our raycasting points
+            +---+---+---+---+
+                | Block |
+                |       |
+                ---------
+             */
+            double direction =  MathUtils.roundRad(blockToNode, Math.PI / 2, 0);
+            double outerAngle, outerLength, innerAngle, innerLength, straightLength;
+            if (blockToNode.getX() == 0) {
+                outerAngle = Math.atan((0.6 + halfLenX) / halfLenZ);
+                outerLength = Math.sqrt((halfLenX + 0.6) * (halfLenX + 0.6) + halfLenZ * halfLenZ);
+                innerAngle = Math.atan(halfLenX / halfLenZ);
+                straightLength = halfLenZ;
+            } else {
+                outerAngle = Math.atan((0.6 + halfLenZ) / halfLenX);
+                outerLength = Math.sqrt((halfLenZ + 0.6) * (halfLenZ + 0.6) + halfLenX * halfLenX);
+                innerAngle = Math.atan(halfLenZ / halfLenX);
+                straightLength = halfLenX;
+            }
+            innerLength = Math.sqrt(halfLenX * halfLenX + halfLenZ * halfLenZ);
+
+            return new Vec3d[] {
+                    MathUtils.rotatedVec(outerLength, direction + outerAngle).add(centerX, maxY, centerZ),
+                    MathUtils.rotatedVec(innerLength, direction + innerAngle).add(centerX, maxY, centerZ),
+                    MathUtils.rotatedVec(straightLength, direction).add(centerX, maxY, centerZ),
+                    MathUtils.rotatedVec(innerLength, direction - innerAngle).add(centerX, maxY, centerZ),
+                    MathUtils.rotatedVec(outerLength, direction - outerAngle).add(centerX, maxY, centerZ)
+            };
+        } else {
+            double direction = MathUtils.roundRad(blockToNode, Math.PI / 2, Math.PI / 4);
+            /*
+            At the + we want our raycasting points
+                           +
+                +---+---+
+                |       |
+                + Block |
+                |       |
+                +--------
+             +
+             */
+            double outerLength, straightLength;
+            straightLength = Math.sqrt(halfLenX * halfLenX + halfLenZ * halfLenZ);
+//            Vec3d middleVector =
+//
+//            return new Vec3d[] {
+//                    MathUtils.rotatedVec(outerLength, direction - outerAngle),
+//                    MathUtils.rotatedVec(innerLength, direction - innerAngle),
+//                    // Nothing fancy here
+//                    MathUtils.rotatedVec(straightLength, direction),
+//                    // tan(0.7853981634 ≈ 45º) = 0.5 / 0.5   | 0.7071067812 = sqrt(0.5^2 + 0.5^2)
+//                    MathUtils.rotatedVec(innerLength, direction + innerAngle),
+//                    // tan(1.1441688337 ≈ 65.56º) = (0.5 + 0.6) / 0.5   | 1.2083045974 = sqrt((0.5 + 0.6)^2 + 0.5^2)
+//                    MathUtils.rotatedVec(outerLength, direction + outerAngle)
+//            };
+        }
+        return null;
+    }
+
+    private static boolean raycastHitboxFace(Entity entity, Vec3d[] start, Vec3d[] end, boolean reverse) {
+        double height = 1.8;
+        if (Math.abs(MathUtils.angleToVec(start[0], end[0]) - MathUtils.angleToVec(start[0], start[2])) < Double.MIN_VALUE * 2
+                || Math.abs(MathUtils.angleToVec(start[0], end[0]) - MathUtils.angleToVec(start[2], start[0])) < Double.MIN_VALUE * 2) {
+            // This would mean, that we just check in one line, but we instead want to raycast the hitbox face of the player
+            return false;
+        }
+        // Code for debugging
+//        for (int i = 0; i < 3; i++) {
+//            Pathing.pathBlocks.addLine(start[i].x, start[i].y, start[i].z, (reverse ? end[2 - i] : end[i]).x, (reverse ? end[2 - i] : end[i]).y, (reverse ? end[2 - i] : end[i]).z, 0xfc0303);
+//        }
+        for (int i = 0; i < 3; i++) {
+            // TODO: Better name
+            RaycastContext feetCast = new RaycastContext(start[i], reverse ? end[2 - i] : end[i], RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
+            if (entity.world.raycast(feetCast).getType() != HitResult.Type.MISS) {
+                return false;
+            }
+            RaycastContext headCast = new RaycastContext(start[i].add(0, height, 0), reverse ? end[2 - i].add(0, height, 0) : end[i].add(0, height, 0),
+                    RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, entity);
+            if (entity.world.raycast(headCast).getType() != HitResult.Type.MISS) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Warum ist hier die width als einziges ein Parameter und sonst nicht?
