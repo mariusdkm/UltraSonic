@@ -29,7 +29,7 @@ public class Caches {
             .build(
                     new CacheLoader<>() {
                         @Override
-                        public Boolean load(@NotNull BlockPos key) {
+                        public @NotNull Boolean load(@NotNull BlockPos key) {
                             assert MinecraftClient.getInstance().player != null;
                             return isWalkable(MinecraftClient.getInstance().player.world, key);
                         }

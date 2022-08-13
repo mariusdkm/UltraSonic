@@ -13,6 +13,7 @@ import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.api.library.impl.FHud;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
+@SuppressWarnings("unused")
 public class MovementUtils {
     private static final double[][] sprintJump = {
             {1.2522, 3.4548},
@@ -216,9 +217,9 @@ public class MovementUtils {
      */
     public static boolean isDirectPath(LivingEntity entity, BlockPos startBlock, BlockPos endBlock) {
         // 0.6 = entity.getDimensions(EntityPose.STANDING).width
-        BlockPos blockToNode = endBlock.subtract(startBlock);
-        Vec3d[] startCorners = getRaycastSpots(entity.world, startBlock, blockToNode);
-        Vec3d[] endCorners = getRaycastSpots(entity.world, endBlock, blockToNode);
+        // BlockPos blockToNode = endBlock.subtract(startBlock);
+        // Vec3d[] startCorners = getRaycastSpots(entity.world, startBlock, blockToNode);
+        // Vec3d[] endCorners = getRaycastSpots(entity.world, endBlock, blockToNode);
 
         return true;
         // When the block is so small, that the only rays are from its corners
@@ -339,6 +340,13 @@ public class MovementUtils {
         return dirVec;
     }
 
+    /**
+     * Creates a box above the given block, with a height of 0.5
+     *
+     * @param world The world
+     * @param pos   The position of the block
+     * @return A box above the block
+     */
     public static Box createArea(World world, BlockPos pos) {
         Box goalArea = world.getBlockState(pos).getCollisionShape(world, pos).getBoundingBox();
         return new Box(goalArea.getMin(Direction.Axis.X) + pos.getX(),

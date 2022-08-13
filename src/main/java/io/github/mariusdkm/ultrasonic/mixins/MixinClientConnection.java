@@ -8,7 +8,6 @@ import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,14 +19,12 @@ import java.util.concurrent.ExecutionException;
 public class MixinClientConnection {
     @Inject(
             at = {@At("HEAD")},
-            method = {"handlePacket"},
-            cancellable = true
+            method = {"handlePacket"}
     )
     private static void onPacketReceive(Packet<?> packet, PacketListener listener, CallbackInfo info) {
         if (MinecraftClient.getInstance().player == null) {
             return;
         }
-        World world = MinecraftClient.getInstance().player.world;
 
         if (packet instanceof BlockUpdateS2CPacket blockUpdateS2CPacket) {
             BlockPos pos = blockUpdateS2CPacket.getPos();

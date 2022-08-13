@@ -21,8 +21,7 @@ public class AStar extends AbstractExecutionThreadService {
     private final BlockPos goal;
     private final ClientPlayerEntity player;
     private final Draw3D scoreBlocks;
-    // private final Simple2dPathFinder simple2DPathFinder;
-    private final Adv3dPathFinder adv3dPathFinder;
+    private final AirPathFinder airPathFinder;
     private Optional<Node> result = Optional.empty();
 
     public AStar(ClientPlayerEntity player, BlockPos start, BlockPos goal, boolean allowSprint) throws Exception {
@@ -58,8 +57,7 @@ public class AStar extends AbstractExecutionThreadService {
         // TODO Temporary fix since some block updates aren't registered
         Caches.WALKABLE.invalidateAll();
 
-        // this.simple2DPathFinder = new Simple2dPathFinder(this.start, this.goal, allowSprint);
-        this.adv3dPathFinder = new Adv3dPathFinder(this.start, this.goal, allowSprint);
+        this.airPathFinder = new AirPathFinder(this.start, this.goal, allowSprint);
     }
 
     public BlockPos getGoal() {
@@ -109,9 +107,7 @@ public class AStar extends AbstractExecutionThreadService {
                 break;
             }
 
-            int currentScore = currentNode.score;
-
-            Queue<CompletableFuture<Node>> newNodes = adv3dPathFinder.calcNode(currentNode, currentScore, closedSet);
+            Queue<CompletableFuture<Node>> newNodes = airPathFinder.calcNode(currentNode, closedSet);
             // Check if the nodes already exist in the queue, and removing duplicates that are worse
             // Without this, the queue would get very big
             Node[] queueArray = queue.toArray(new Node[0]);

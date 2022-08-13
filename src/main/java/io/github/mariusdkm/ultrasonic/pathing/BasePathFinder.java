@@ -17,5 +17,5 @@ public abstract class BasePathFinder {
         this.allowSprint = allowSprint;
     }
 
-    public abstract Queue<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet);
+    public abstract Queue<CompletableFuture<Node>> calcNode(Node currentNode, Set<Node> closedSet);
 }

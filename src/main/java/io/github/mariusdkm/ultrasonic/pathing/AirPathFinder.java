@@ -22,15 +22,15 @@ import java.util.concurrent.CompletableFuture;
 
 import static io.github.mariusdkm.ultrasonic.utils.MovementUtils.*;
 
-public class Adv3dPathFinder extends BasePathFinder {
+public class AirPathFinder extends BasePathFinder {
     private final int[] sprintJumpDist = {4, 5, 6, 6, 6, 6, 6, 7, 7, 7, 8};
 
-    public Adv3dPathFinder(BlockPos start, BlockPos goal, boolean allowSprint) {
+    public AirPathFinder(BlockPos start, BlockPos goal, boolean allowSprint) {
         super(start, goal, allowSprint);
     }
 
     @Override
-    public Queue<CompletableFuture<Node>> calcNode(Node currentNode, int currentScore, Set<Node> closedSet) {
+    public Queue<CompletableFuture<Node>> calcNode(Node currentNode, Set<Node> closedSet) {
         Queue<CompletableFuture<Node>> queue = new ArrayDeque<>();
 
         int maxDepthY = -5;
@@ -59,21 +59,13 @@ public class Adv3dPathFinder extends BasePathFinder {
                     final int finalX = x;
                     final int finalZ = z;
                     final int finalY = y;
-                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
-                            new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()),
-                            currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
-                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
-                            new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()),
-                            currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
+                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(finalX, finalY, finalZ, currentNode, closedSet)));
+                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(-finalX, finalY, -finalZ, currentNode, closedSet)));
 
                     if (x != 0 && z != 0) {
                         // We don't want the points at the axis doubled
-                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
-                                new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()),
-                                currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
-                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
-                                new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()),
-                                currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
+                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(finalX, finalY, -finalZ, currentNode, closedSet)));
+                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(-finalX, finalY, finalZ, currentNode, closedSet)));
                     }
 
 //                    if ((x * x) + (z * z) < walkRadius) {
@@ -92,32 +84,21 @@ public class Adv3dPathFinder extends BasePathFinder {
         return queue;
     }
 
-    private Node calcBlock(Node newNode, Node currentNode, Set<Node> closedSet, boolean sprint) {
-        if (!closedSet.contains(newNode) && newNode.isWalkable()) {
-            Box startArea = createArea(currentNode.player.world, currentNode.pos);
-            Box goalArea = createArea(newNode.player.world, newNode.pos);
-            double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
-            // -2.0695 is the maximum height a player can jump down, while -3.3462 is the max walking down
-            if (Pathing.immuneToDamage || heightDiff > -2.0695) {
-                double reach = MovementUtils.findSprintJumpReach(heightDiff);
-                Vec3d optimalJumpReach = createFocus(newNode.player.world, newNode.pos.subtract(currentNode.pos), currentNode.pos,
-                        0.8 + reach,
-                        1.13 + reach,
-                        1).add(currentNode.pos.getX() + 0.5, goalArea.getMax(Direction.Axis.Y), currentNode.pos.getZ() + 0.5);
-                double jumpHeight = 1.2522;
-                if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= jumpHeight
-                        && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
-                    newNode.score = calcScore(newNode, currentNode.pos, startArea, goalArea, sprint);
-                    newNode.prevNode = currentNode;
-                    return newNode;
-                }
-            }
+    private Node calcBlock(int x, int y, int z, Node currentNode, Set<Node> closedSet) {
+        Node newNode = new Node(
+                new BlockPos(x + currentNode.pos.getX(), y + currentNode.pos.getY(), z + currentNode.pos.getZ()),
+                currentNode.score,
+                currentNode.distTravel,
+                currentNode.player);
+        if (closedSet.contains(newNode)) {
             return null;
         }
-        return null;
+        newNode.score = calcScore(newNode, currentNode, this.allowSprint);
+        newNode.prevNode = currentNode;
+        return newNode;
     }
 
-    private int calcScore(Node newNode, BlockPos currentPos, Box startArea, Box goalArea, boolean sprint) {
+    private int calcScore(Node newNode, Node currentNode, boolean sprint) {
         // h = how many tick is it going take to finish
         // h = distanceToGoal / avgSpeed; avgSpeed = distanceFromStart / timeSpend
         // h = distanceToGoal * timeSpend / distanceFromStart
@@ -126,7 +107,7 @@ public class Adv3dPathFinder extends BasePathFinder {
 
         int movementCost;
         try {
-            movementCost = findMovements(newNode, currentPos, startArea, goalArea, sprint);
+            movementCost = findMove(newNode, currentNode, sprint);
         } catch (Exception e) {
             MinecraftClient mc = MinecraftClient.getInstance();
             mc.execute(() -> ((IChatHud) mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(Text.of(e.getMessage()).copy().setStyle(Style.EMPTY.withColor(Formatting.DARK_RED))));
@@ -148,7 +129,29 @@ public class Adv3dPathFinder extends BasePathFinder {
         return newNode.score + movementCost + heuristic;
     }
 
-    private int findMovements(Node node, BlockPos currentPos, Box startArea, Box goalArea, boolean sprint) {
+    private int findMove(Node newNode, Node currentNode, boolean sprint) {
+        if (newNode.isWalkable()) {
+            Box startArea = createArea(currentNode.player.world, currentNode.pos);
+            Box goalArea = createArea(newNode.player.world, newNode.pos);
+            double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
+            // -2.0695 is the maximum height a player can jump down, while -3.3462 is the max walking down
+            if (Pathing.immuneToDamage || heightDiff > -2.0695) {
+                double reach = MovementUtils.findSprintJumpReach(heightDiff);
+                Vec3d optimalJumpReach = createFocus(newNode.player.world, newNode.pos.subtract(currentNode.pos), currentNode.pos,
+                        0.8 + reach,
+                        1.13 + reach,
+                        1).add(currentNode.pos.getX() + 0.5, goalArea.getMax(Direction.Axis.Y), currentNode.pos.getZ() + 0.5);
+                double jumpHeight = 1.2522;
+                if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= jumpHeight
+                        && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
+                    return findJumpMove(newNode, currentNode.pos, startArea, goalArea, sprint);
+                }
+            }
+        }
+        return Integer.MAX_VALUE;
+    }
+
+    private int findJumpMove(Node node, BlockPos currentPos, Box startArea, Box goalArea, boolean sprint) {
         int cost;
         boolean directPath = isDirectPath(node.player, currentPos, node.pos);
         BlockPos blockToNode = node.pos.subtract(currentPos);
@@ -163,16 +166,15 @@ public class Adv3dPathFinder extends BasePathFinder {
             runFocus = new Vec3d(node.pos.getX() + 0.5, startArea.getMin(Direction.Axis.Y), node.pos.getZ() + 0.5);
             jumpFocus = new Vec3d(node.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), node.pos.getZ() + 0.5);
         } else {
-            // We use the pos of the last node here, because the player could still be on the corner of another block
-            // The length is outside the block, so that the player can't reach it, without exiting the startArea
+            // Max size of the block
             double max = Math.max(startArea.getXLength(), startArea.getZLength());
-            // Root of what?
-            double sqrt = Math.sqrt(2 * Math.pow(0.3 + max / 2, 2));
+            // Diagonal length of the block with half of the player hitbox
+            double diagonalLength = Math.sqrt(2 * Math.pow(0.3 + max / 2, 2));
             runFocus = new Vec3d(currentPos.getX() + 0.5, startArea.getMin(Direction.Axis.Y), currentPos.getZ() + 0.5)
                     .add(createFocus(node.player.world, blockToNode, currentPos,
                             0.3 + max,
-                            sqrt,
-                            sqrt));
+                            diagonalLength,
+                            diagonalLength));
 
             // The cornered length is outside the block, so that the player can
             jumpFocus = new Vec3d(node.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), node.pos.getZ() + 0.5)
@@ -213,10 +215,11 @@ public class Adv3dPathFinder extends BasePathFinder {
             }
 
             prevTestSubject = testSubject.clone();
-            if (MovementUtils.simulateJump(testSubject, jumpFocus, goalArea, sprint, MovementUtils.ticksToLand(heightDiff))) {
+            boolean successfulJump = MovementUtils.simulateJump(testSubject, jumpFocus, goalArea, sprint, MovementUtils.ticksToLand(heightDiff));
+            if (successfulJump) {
                 break;
             } else if (!startArea.intersects(prevTestSubject.getBoundingBox())) {
-                // We only want to check jumps from the startArea
+                // TestSubject is outside the startArea, no need to continue
                 return Integer.MAX_VALUE;
             } else {
                 testSubject = prevTestSubject.clone();

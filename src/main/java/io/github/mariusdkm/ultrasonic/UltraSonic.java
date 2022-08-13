@@ -16,10 +16,10 @@ public class UltraSonic implements ModInitializer {
     public void onInitialize() {
         LOGGER.atLevel(Level.DEBUG);
         if (IS_JS_MACROS_PRESENT) {
-            LOGGER.info("Jsmacros is present");
+            LOGGER.info("JsMacros is present");
             JsMacros.core.libraryRegistry.addLibrary(Pathing.class);
         } else {
-            LOGGER.info("Jsmacros is not present");
+            LOGGER.info("JsMacros is not present");
         }
     }
 }
