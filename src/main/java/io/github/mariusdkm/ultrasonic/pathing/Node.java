@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 
 // Maybe turn into record
 public class Node {
+    static final Comparator<Node> nodeComparator = Comparator.comparingInt(n -> n.score);
     public BlockPos pos;
     public int score;
     public double distTravel;
@@ -49,6 +50,4 @@ public class Node {
                 ", score=" + score +
                 '}';
     }
-
-    static final Comparator<Node> nodeComparator = (n1, n2) ->  Integer.compare(n1.score, n2.score);
 }

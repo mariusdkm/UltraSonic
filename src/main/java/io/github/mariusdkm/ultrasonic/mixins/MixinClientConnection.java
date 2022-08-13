@@ -24,7 +24,7 @@ public class MixinClientConnection {
             cancellable = true
     )
     private static void onPacketReceive(Packet<?> packet, PacketListener listener, CallbackInfo info) {
-        if(MinecraftClient.getInstance().player == null) {
+        if (MinecraftClient.getInstance().player == null) {
             return;
         }
         World world = MinecraftClient.getInstance().player.world;

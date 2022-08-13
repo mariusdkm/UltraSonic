@@ -19,6 +19,12 @@ repositories {
     maven {
         url 'https://jitpack.io'
     }
+    maven {
+        url "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
 //    flatDir {
 //        dirs 'libs'
 //    }
@@ -30,28 +36,11 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    // Partial fabric api (only needed for JsM support, normally supplied in the JsM mod)
-    modImplementation "net.fabricmc.fabric-api:fabric-api-base:${project.api_base_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-lifecycle-events-v1:${project.lifecycle_events_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:${project.key_bind_api_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-command-api-v1:${project.command_api_version}"
-
+    // To run in dev, copy JsMacros into your runtime mods folder
     // JsMacros
-    modImplementation("com.github.wagyourtail.JsMacros:jsmacros-${project.minecraft_version}-fabric:${project.jsmacros_version}") {
+    modCompileOnly("com.github.wagyourtail.JsMacros:jsmacros-${project.minecraft_version}-fabric:${project.jsmacros_version}") {
         transitive = false
     }
-
-    // Needed for JsMacros
-    implementation "io.noties:prism4j:${project.prism_version}"
-    implementation "org.graalvm.sdk:graal-sdk:${project.graal_version}"
-    implementation "org.graalvm.js:js:${project.graal_version}"
-
-    // Other libraries
-    implementation "com.google.guava:guava:${project.gueva_version}"
-
-    // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
-    // You may need to force-disable transitiveness on them.
 }
 
 

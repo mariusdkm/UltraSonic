@@ -119,7 +119,7 @@ public class MovementUtils {
      */
     public static double jumpReach(MovementDummy player, int ticks, Direction.Axis axis, boolean sprint) {
         double reach = 0.0;
-        double yaw = player.getYaw(); //Should this become its own variable?
+        double yaw = player.getYaw(); // Should this become its own variable?
 
         // We first have to add the one tick of ground movement.
         double motion = groundTick(player, sprint, true).getComponentAlongAxis(axis);
@@ -131,11 +131,11 @@ public class MovementUtils {
 
         trig *= ((sprint) ? 0.02548 : 0.0196); // 0.02548 =  0.98 * (0.02 + 0.02 * 0.3); 0.0196 = 0.98 * 0.02
 
-        //We start counting at the second tick, since we already calculated the 1.
+        // We start counting at the second tick, since we already calculated the 1.
         for (int tick = 1; tick < ticks; tick++) {
             motion += trig;
             reach += motion;
-            motion *= 0.91; //drag
+            motion *= 0.91; // drag
         }
         return reach;
     }
@@ -402,7 +402,7 @@ public class MovementUtils {
                 |       |
                 ---------
              */
-            double direction =  MathUtils.roundRad(blockToNode, Math.PI / 2, 0);
+            double direction = MathUtils.roundRad(blockToNode, Math.PI / 2, 0);
             double outerAngle, outerLength, innerAngle, innerLength, straightLength;
             if (blockToNode.getX() == 0) {
                 outerAngle = Math.atan((0.6 + halfLenX) / halfLenZ);
@@ -417,7 +417,7 @@ public class MovementUtils {
             }
             innerLength = Math.sqrt(halfLenX * halfLenX + halfLenZ * halfLenZ);
 
-            return new Vec3d[] {
+            return new Vec3d[]{
                     MathUtils.rotatedVec(outerLength, direction + outerAngle).add(centerX, maxY, centerZ),
                     MathUtils.rotatedVec(innerLength, direction + innerAngle).add(centerX, maxY, centerZ),
                     MathUtils.rotatedVec(straightLength, direction).add(centerX, maxY, centerZ),

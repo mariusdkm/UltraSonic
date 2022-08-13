@@ -4,8 +4,8 @@ import io.github.mariusdkm.ultrasonic.api.Pathing;
 import io.github.mariusdkm.ultrasonic.utils.MathUtils;
 import io.github.mariusdkm.ultrasonic.utils.MovementUtils;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -38,7 +38,8 @@ public class Adv3dPathFinder extends BasePathFinder {
             double nextXn = 0;
             int sprintRadius = sprintJumpDist[-y + 2];
             // int walkRadius = sprintRadius / 2;
-            forX: for (int x = 0; x <= sprintRadius; x++) {
+            forX:
+            for (int x = 0; x <= sprintRadius; x++) {
                 double xn = nextXn;
                 nextXn = (x + 1.0) / sprintRadius;
                 double nextZn = 0;
@@ -59,19 +60,19 @@ public class Adv3dPathFinder extends BasePathFinder {
                     final int finalZ = z;
                     final int finalY = y;
                     queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
-                            new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(),finalZ + currentNode.pos.getZ()),
+                            new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()),
                             currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
                     queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
-                            new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(),-finalZ + currentNode.pos.getZ()),
+                            new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()),
                             currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
 
                     if (x != 0 && z != 0) {
                         // We don't want the points at the axis doubled
                         queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
-                                new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(),-finalZ + currentNode.pos.getZ()),
+                                new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()),
                                 currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
                         queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(
-                                new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(),finalZ + currentNode.pos.getZ()),
+                                new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()),
                                 currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, true)));
                     }
 
@@ -128,7 +129,7 @@ public class Adv3dPathFinder extends BasePathFinder {
             movementCost = findMovements(newNode, currentPos, startArea, goalArea, sprint);
         } catch (Exception e) {
             MinecraftClient mc = MinecraftClient.getInstance();
-            mc.execute(() -> ((IChatHud) mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(Formatting.DARK_RED))));
+            mc.execute(() -> ((IChatHud) mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(Text.of(e.getMessage()).copy().setStyle(Style.EMPTY.withColor(Formatting.DARK_RED))));
             return Integer.MAX_VALUE;
         }
 
