@@ -59,7 +59,7 @@ public class MovementUtils {
      * @param height how high/low to jump, relative to the start
      * @return number of ticks in the air
      */
-    public static double findSprintJumpReach(double height) {
+    public static double getSprintJumpReach(double height) {
         return sprintJump[MathHelper.binarySearch(0, sprintJump.length, (i) -> height > sprintJump[i][0])][1];
     }
 
@@ -146,7 +146,6 @@ public class MovementUtils {
      * Only walking/sprinting forward is supported, not strafe.<br>
      * If jumping and sprinting the player receives a boost.<br>
      *
-     * <b>dir must be capitalized</b><br>
      * <p>
      *
      * @param motion  The motion of the player, in which to be calculated(either X or Z)
@@ -261,6 +260,9 @@ public class MovementUtils {
 
     public static boolean simulateJump(MovementDummy testSubject, Vec3d goalFocus, Box goal, boolean allowSprint, int ticks) {
         double yaw = MathUtils.angleToVec(testSubject.getPos(), goalFocus);
+        if (Double.isNaN(yaw)) {
+            System.out.println("Yaw is NaN");
+        }
         testSubject.applyInput(new PlayerInput(1, 0, yaw, 0, true, false, allowSprint));
         MovementDummy prevTestSubject;
         // We are jumping, YEET
@@ -268,6 +270,9 @@ public class MovementUtils {
             prevTestSubject = testSubject.clone();
 
             yaw = MathUtils.angleToVec(testSubject.getPos(), goalFocus);
+            if (Double.isNaN(yaw)) {
+                System.out.println("Yaw is NaN");
+            }
             PlayerInput newInput = new PlayerInput(1, 0, yaw, 0, false, false, allowSprint);
             testSubject.applyInput(newInput);
 
@@ -283,27 +288,33 @@ public class MovementUtils {
     }
 
     public static double doObstacleAvoidance(MovementDummy testSubject, MovementDummy prevTestSubject, PlayerInput newInput, Vec3d jumpFocus, boolean allowSprint) {
-        if (testSubject.horizontalCollision) {
-            // The player collided with a wall, that means on of his velocity vectors is set to 0
-            // --> we loose momentum/speed
-            double diff = testSubject.getPos().squaredDistanceTo(prevTestSubject.getPos());
-            testSubject = prevTestSubject.clone();
-
-            // That's why we move in the direction the wall pushes us, which is usually parallel to the wall
-            newInput.yaw = (float) (MathUtils.calcAngleDegXZ(testSubject.getVelocity()));
-            testSubject.applyInput(newInput);
-
-            // But do we actually travel further with the new yaw?
-            if (diff > testSubject.getPos().squaredDistanceTo(prevTestSubject.getPos())) {
-                // Nope, so do the same as before
-                testSubject.applyInput(newInput);
-                return diff;
-            } else {
-                // Yes, this is actually better
-                return testSubject.getPos().squaredDistanceTo(prevTestSubject.getPos());
-            }
+        if (!testSubject.horizontalCollision) {
+            return 0;
         }
-        return 0;
+        // The player collided with a wall, that means on of his velocity vectors is set to 0
+        // --> we loose momentum/speed
+        double diff = testSubject.getPos().squaredDistanceTo(prevTestSubject.getPos());
+        testSubject = prevTestSubject.clone();
+
+        // That's why we move in the direction the wall pushes us, which is usually parallel to the wall
+        float yaw = (float) MathUtils.calcAngleDegXZ(testSubject.getVelocity());
+        if (Float.isNaN(yaw)) {
+            // This happens when the player is standing still/has no velocity
+            return 0;
+        }
+        newInput.yaw = yaw;
+        testSubject.applyInput(newInput);
+
+        // But do we actually travel further with the new yaw?
+        if (testSubject.getPos().squaredDistanceTo(prevTestSubject.getPos()) < diff) {
+            // Nope, so do the same as before
+            testSubject = prevTestSubject.clone();
+            testSubject.applyInput(newInput);
+            return diff;
+        } else {
+            // Yes, this is actually better
+            return testSubject.getPos().squaredDistanceTo(prevTestSubject.getPos());
+        }
     }
 
     public static Vec3d createFocus(World world, Vec3i blockToNode, BlockPos sourcePos, double straightLen, double diagonalLen, double corneredLen) {

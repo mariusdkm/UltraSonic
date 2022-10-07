@@ -6,6 +6,7 @@ import io.github.mariusdkm.ultrasonic.utils.MovementUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -16,6 +17,7 @@ import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -23,20 +25,21 @@ import java.util.concurrent.CompletableFuture;
 import static io.github.mariusdkm.ultrasonic.utils.MovementUtils.*;
 
 public class AirPathFinder extends BasePathFinder {
-    private final int[] sprintJumpDist = {4, 5, 6, 6, 6, 6, 6, 7, 7, 7, 8};
+
+    private final int[] SPRINT_JUMP_RANGE = {4, 5, 6, 6, 6, 6, 6, 7, 7, 7, 8};
+    private final BlockPos[] jumpingSphere;
 
     public AirPathFinder(BlockPos start, BlockPos goal, boolean allowSprint) {
         super(start, goal, allowSprint);
+        jumpingSphere = createJumpingSphere();
     }
 
-    @Override
-    public Queue<CompletableFuture<Node>> calcNode(Node currentNode, Set<Node> closedSet) {
-        Queue<CompletableFuture<Node>> queue = new ArrayDeque<>();
-
+    private BlockPos[] createJumpingSphere() {
+        ArrayList<BlockPos> blocks = new ArrayList<>();
         int maxDepthY = -5;
         for (int y = 2; y >= maxDepthY; y--) {
             double nextXn = 0;
-            int sprintRadius = sprintJumpDist[-y + 2];
+            int sprintRadius = SPRINT_JUMP_RANGE[-y + 2];
             // int walkRadius = sprintRadius / 2;
             forX:
             for (int x = 0; x <= sprintRadius; x++) {
@@ -55,38 +58,33 @@ public class AirPathFinder extends BasePathFinder {
                         }
                         break;
                     }
-
-                    final int finalX = x;
-                    final int finalZ = z;
-                    final int finalY = y;
-                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(finalX, finalY, finalZ, currentNode, closedSet)));
-                    queue.add(CompletableFuture.supplyAsync(() -> calcBlock(-finalX, finalY, -finalZ, currentNode, closedSet)));
-
-                    if (x != 0 && z != 0) {
-                        // We don't want the points at the axis doubled
-                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(finalX, finalY, -finalZ, currentNode, closedSet)));
-                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(-finalX, finalY, finalZ, currentNode, closedSet)));
-                    }
-
-//                    if ((x * x) + (z * z) < walkRadius) {
-//                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, false)));
-//                        queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, false)));
-//
-//                        if (x != 0 && z != 0) {
-//                            // We don't want the points at the axis doubled
-//                            queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), -finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, false)));
-//                            queue.add(CompletableFuture.supplyAsync(() -> calcBlock(new Node(new BlockPos(-finalX + currentNode.pos.getX(), finalY + currentNode.pos.getY(), finalZ + currentNode.pos.getZ()), currentScore, currentNode.distTravel, currentNode.player), currentNode, closedSet, false)));
-//                        }
-//                    }
+                    blocks.add(new BlockPos(x, y, z));
                 }
+            }
+        }
+        return blocks.toArray(new BlockPos[0]);
+    }
+
+    @Override
+    public Queue<CompletableFuture<Node>> calcNode(Node currentNode, Set<Node> closedSet) {
+        Queue<CompletableFuture<Node>> queue = new ArrayDeque<>();
+
+        for (BlockPos block : jumpingSphere) {
+            queue.add(CompletableFuture.supplyAsync(() -> calcBlock(block, currentNode, closedSet)));
+            queue.add(CompletableFuture.supplyAsync(() -> calcBlock(block.rotate(BlockRotation.CLOCKWISE_180), currentNode, closedSet)));
+
+            if (block.getX() != 0 && block.getZ() != 0) {
+                // We don't want the points at the axis doubled
+                queue.add(CompletableFuture.supplyAsync(() -> calcBlock(block.rotate(BlockRotation.CLOCKWISE_90), currentNode, closedSet)));
+                queue.add(CompletableFuture.supplyAsync(() -> calcBlock(block.rotate(BlockRotation.COUNTERCLOCKWISE_90), currentNode, closedSet)));
             }
         }
         return queue;
     }
 
-    private Node calcBlock(int x, int y, int z, Node currentNode, Set<Node> closedSet) {
+    private Node calcBlock(BlockPos block, Node currentNode, Set<Node> closedSet) {
         Node newNode = new Node(
-                new BlockPos(x + currentNode.pos.getX(), y + currentNode.pos.getY(), z + currentNode.pos.getZ()),
+                block.add(currentNode.pos),
                 currentNode.score,
                 currentNode.distTravel,
                 currentNode.player);
@@ -118,6 +116,12 @@ public class AirPathFinder extends BasePathFinder {
             return Integer.MAX_VALUE;
         }
 
+        int heuristic = calcHeuristic(newNode);
+
+        return newNode.score + movementCost + heuristic;
+    }
+
+    private int calcHeuristic(Node newNode) {
         int heuristic;
         double avgSpeed = newNode.distTravel / newNode.player.getInputs().size();
         if (avgSpeed > 0.05) {
@@ -125,37 +129,40 @@ public class AirPathFinder extends BasePathFinder {
         } else {
             heuristic = (int) (newNode.pos.getSquaredDistance(goal) / 0.1);
         }
-
-        return newNode.score + movementCost + heuristic;
+        return heuristic;
     }
 
     private int findMove(Node newNode, Node currentNode, boolean sprint) {
-        if (newNode.isWalkable()) {
-            Box startArea = createArea(currentNode.player.world, currentNode.pos);
-            Box goalArea = createArea(newNode.player.world, newNode.pos);
-            double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
-            // -2.0695 is the maximum height a player can jump down, while -3.3462 is the max walking down
-            if (Pathing.immuneToDamage || heightDiff > -2.0695) {
-                double reach = MovementUtils.findSprintJumpReach(heightDiff);
-                Vec3d optimalJumpReach = createFocus(newNode.player.world, newNode.pos.subtract(currentNode.pos), currentNode.pos,
-                        0.8 + reach,
-                        1.13 + reach,
-                        1).add(currentNode.pos.getX() + 0.5, goalArea.getMax(Direction.Axis.Y), currentNode.pos.getZ() + 0.5);
-                double jumpHeight = 1.2522;
-                if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= jumpHeight
-                        && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
-                    return findJumpMove(newNode, currentNode.pos, startArea, goalArea, sprint);
-                }
-            }
+        if (!newNode.isWalkable()) {
+            return Integer.MAX_VALUE;
         }
-        return Integer.MAX_VALUE;
+
+        Box startArea = createArea(currentNode.player.world, currentNode.pos);
+        Box goalArea = createArea(newNode.player.world, newNode.pos);
+        double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
+
+        // -2.0695 is the maximum height a player can jump down, while -3.3462 is the max walking down
+        if (!Pathing.immuneToDamage && heightDiff < -2.0695) {
+            return Integer.MAX_VALUE;
+        }
+
+        double reach = MovementUtils.getSprintJumpReach(heightDiff);
+        // Create a point, which is the maximum distance away a player could reach
+        Vec3d optimalJumpReach = createFocus(newNode.player.world, newNode.pos.subtract(currentNode.pos), currentNode.pos,
+                0.8 + reach,
+                1.13 + reach,
+                1).add(currentNode.pos.getX() + 0.5, goalArea.getMax(Direction.Axis.Y), currentNode.pos.getZ() + 0.5);
+        double jumpHeight = 1.2522;
+        if (goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y) <= jumpHeight
+                && goalArea.intersects(new Vec3d(currentNode.pos.getX() + 0.5, goalArea.getMin(Direction.Axis.Y), currentNode.pos.getZ() + 0.5), optimalJumpReach)) {
+            return findJumpMove(newNode, currentNode.pos, startArea, goalArea, sprint);
+        }
+        return  Integer.MAX_VALUE;
     }
 
     private int findJumpMove(Node node, BlockPos currentPos, Box startArea, Box goalArea, boolean sprint) {
-        int cost;
         boolean directPath = isDirectPath(node.player, currentPos, node.pos);
         BlockPos blockToNode = node.pos.subtract(currentPos);
-        double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
 
         // The point that is run/walked towards before jumping
         Vec3d runFocus;
@@ -188,7 +195,12 @@ public class AirPathFinder extends BasePathFinder {
             return Integer.MAX_VALUE;
         }
 
-        cost = 0;
+        return tryMove(node, currentPos, startArea, goalArea, sprint, runFocus, jumpFocus);
+    }
+
+    private int tryMove(Node node, BlockPos currentPos, Box startArea, Box goalArea, boolean sprint, Vec3d runFocus, Vec3d jumpFocus) {
+        double heightDiff = goalArea.getMin(Direction.Axis.Y) - startArea.getMin(Direction.Axis.Y);
+        int cost = 0;
         MovementDummy testSubject = node.player.clone();
         // Note: when cloning the testSubject many attribute like verticalCollision aren't copied
         MovementDummy prevTestSubject;
@@ -209,7 +221,7 @@ public class AirPathFinder extends BasePathFinder {
             PlayerInput newInput = new PlayerInput(1.0F, 0.0F, yaw, 0.0F, false, false, sprint);
             testSubject.applyInput(newInput);
 
-            if (testSubject.horizontalCollision && Math.abs(doObstacleAvoidance(testSubject, prevTestSubject, newInput, jumpFocus, sprint)) < 2 * Double.MIN_VALUE) {
+            if (testSubject.horizontalCollision && Math.abs(doObstacleAvoidance(testSubject, prevTestSubject, newInput, jumpFocus, sprint)) <= 2 * Double.MIN_VALUE) {
                 // We don't move at all, so something must be wrong
                 return Integer.MAX_VALUE;
             }
