@@ -29,6 +29,22 @@ public class MathUtils {
         return new Vec3d(-len * f_sin((float) rad), 0, len * f_cos(rad));
     }
 
+    public static Vec3i roundDirection(Vec3i vec) {
+        int angle = (int) (MathUtils.roundRad(vec, Math.PI / 4, 0) * 180 / Math.PI);
+        return switch (Math.abs(angle)) {
+            case 0 -> new Vec3i(0, 0, 1);
+            case 45 -> new Vec3i(-1, 0, 1);
+            case 90 -> new Vec3i(-1, 0, 0);
+            case 135 -> new Vec3i(-1, 0, -1);
+            case 180 -> new Vec3i(0, 0, -1);
+            case 225 -> new Vec3i(1, 0, -1);
+            case 270 -> new Vec3i(1, 0, 0);
+            case 315 -> new Vec3i(1, 0, 1);
+            default -> throw new IllegalStateException("Unexpected value: " + angle);
+        };
+
+    }
+
     public static Vec3d vec3dFromBlockPos(BlockPos pos, boolean treatAsBlockPos) {
         if (treatAsBlockPos) {
             return new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
@@ -36,6 +52,8 @@ public class MathUtils {
             return new Vec3d(pos.getX(), pos.getY(), pos.getZ());
         }
     }
+
+
 
     /**
      * Calculates the angle relative to the world, which the vector from `vec1` to `vec2` has.
@@ -121,5 +139,15 @@ public class MathUtils {
         t3 = (x < 0) ? Math.PI - t3 : t3;
 
         return (y < 0) ? -t3 : t3;
+    }
+
+    // add two vectors
+    public static Vec3d add(Vec3d vec1, Vec3d vec2) {
+        return new Vec3d(vec1.getX() + vec2.getX(), vec1.getY() + vec2.getY(), vec1.getZ() + vec2.getZ());
+    }
+
+    // subtract two vectors
+    public static Vec3d subtract(Vec3d vec1, Vec3d vec2) {
+        return new Vec3d(vec1.getX() - vec2.getX(), vec1.getY() - vec2.getY(), vec1.getZ() - vec2.getZ());
     }
 }

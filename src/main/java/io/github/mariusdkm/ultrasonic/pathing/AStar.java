@@ -1,8 +1,11 @@
 package io.github.mariusdkm.ultrasonic.pathing;
 
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import xyz.wagyourtail.jsmacros.client.access.IChatHud;
 import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
 import xyz.wagyourtail.jsmacros.client.api.library.impl.FHud;
 import xyz.wagyourtail.jsmacros.client.movement.MovementDummy;
@@ -70,6 +73,8 @@ public class AStar extends AbstractExecutionThreadService {
 
     @Override
     protected void run() {
+        long startTime = System.nanoTime();
+
         // r^2 * PI should be 75, but a smaller initial Capacity might actually be better
         Queue<Node> queue = new PriorityBlockingQueue<>(50, Node.nodeComparator);
         Set<Node> closedSet = new HashSet<>();
@@ -132,6 +137,15 @@ public class AStar extends AbstractExecutionThreadService {
         synchronized (FHud.renders) {
             FHud.renders.remove(scoreBlocks);
         }
+
+
+        long endTime = System.nanoTime();
+        double seconds = (endTime - startTime) / 1e9;
+
+        String info = "Searched paths from %d blocks in %f seconds".formatted(closedSet.size(), seconds);
+        MinecraftClient mc = MinecraftClient.getInstance();
+        mc.execute(() -> ((IChatHud) mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(Text.of(info)));
+
         result = routeAvailable ? Optional.of(currentNode) : Optional.empty();
     }
 }

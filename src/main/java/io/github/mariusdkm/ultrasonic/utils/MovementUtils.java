@@ -317,38 +317,34 @@ public class MovementUtils {
         }
     }
 
+    private static boolean noAirAbove(World world, BlockPos pos, int x, int z) {
+        return !world.getBlockState(pos.add(x, 1, z)).isAir() || !world.getBlockState(pos.add(x, 2, z)).isAir();
+    }
+
     public static Vec3d createFocus(World world, Vec3i blockToNode, BlockPos sourcePos, double straightLen, double diagonalLen, double corneredLen) {
-        Vec3d dirVec;
-        if (blockToNode.getX() == 0 || blockToNode.getZ() == 0) {
-            dirVec = MathUtils.rotatedVec(diagonalLen, MathUtils.roundRad(blockToNode, Math.PI / 2, 0));
-        } else {
-            dirVec = MathUtils.rotatedVec(diagonalLen, MathUtils.roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
-        }
+        Vec3i dirVec = MathUtils.roundDirection(blockToNode);
+
+        Vec3d result = MathUtils.rotatedVec(diagonalLen, MathUtils.roundRad(blockToNode, Math.PI / 4, 0.0));
         if (Math.abs(blockToNode.getX()) <= 1 && Math.abs(blockToNode.getZ()) <= 1) {
             // It could be that the block we want to walk onto is directly in front of us
             // in that case we just walk towards the block
-            return dirVec;
+            return result;
         }
-        int dirX = (int) Math.signum(dirVec.getX());
-        int dirZ = (int) Math.signum(dirVec.getZ());
-        if (!world.getBlockState(sourcePos.add(dirX, 1, dirZ)).isAir() ||
-                !world.getBlockState(sourcePos.add(dirX, 2, dirZ)).isAir()) {
+        if (noAirAbove(world, sourcePos, dirVec.getX(), dirVec.getZ())) {
             // Round to 90 Deg, so that we move to one of the sides of the diagonal block
-            dirVec = MathUtils.rotatedVec(straightLen, MathUtils.roundRad(blockToNode, Math.PI / 2, 0.0));
+            result = MathUtils.rotatedVec(straightLen, MathUtils.roundRad(blockToNode, Math.PI / 2, 0.0));
         }
-        if (!world.getBlockState(sourcePos.add(dirX, 1, 0)).isAir() ||
-                !world.getBlockState(sourcePos.add(dirX, 2, 0)).isAir()) {
-            dirVec = new Vec3d(0, 0, (0 > dirZ) ? -straightLen : straightLen);
+        if (noAirAbove(world, sourcePos, dirVec.getX(), 0)) {
+            result = new Vec3d(0, 0, (0 > dirVec.getZ()) ? -straightLen : straightLen);
         }
-        if (!world.getBlockState(sourcePos.add(0, 1, dirZ)).isAir() ||
-                !world.getBlockState(sourcePos.add(0, 2, dirZ)).isAir()) {
-            dirVec = new Vec3d((0 > dirX) ? -straightLen : straightLen, 0, 0);
+        if (noAirAbove(world, sourcePos, 0, dirVec.getZ())) {
+            result = new Vec3d((0 > dirVec.getX()) ? -straightLen : straightLen, 0, 0);
         }
         if (dirVec.getX() == 0 && dirVec.getZ() == 0) {
             // There are blocks on either side of our focus
-            dirVec = MathUtils.rotatedVec(corneredLen, MathUtils.roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
+            result = MathUtils.rotatedVec(corneredLen, MathUtils.roundRad(blockToNode, Math.PI / 2, Math.PI / 4));
         }
-        return dirVec;
+        return result;
     }
 
     /**
